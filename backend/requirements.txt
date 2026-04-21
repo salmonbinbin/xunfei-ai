@@ -1,0 +1,46 @@
+# AI小商 - FastAPI后端依赖
+
+# Web框架
+fastapi>=0.110.0
+uvicorn[standard]>=0.27.0
+
+# 数据库
+sqlalchemy>=2.0.0
+aiomysql>=0.2.0
+pymysql>=1.1.0
+
+# 数据验证
+pydantic>=2.0.0
+pydantic-settings>=2.0.0
+
+# 认证
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+python-multipart>=0.0.6
+
+# HTTP请求
+requests>=2.31.0
+aiofiles>=23.0.0
+
+# 文档生成
+python-docx>=0.8.0
+python-pptx>=0.6.0
+
+# 向量数据库
+chromadb>=0.4.0
+
+# WebSocket
+websockets>=12.0
+websocket-client>=1.7.0
+
+# 日志
+loguru>=0.7.0
+
+# 微信
+wechatpy>=1.8.0
+
+# 图片处理
+Pillow>=10.0.0
+
+# 日期时间
+python-dateutil>=2.8.0

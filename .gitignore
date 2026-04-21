@@ -1,0 +1,59 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+ENV/
+env/
+.venv/
+*.egg-info/
+dist/
+build/
+*.egg
+
+# Node
+node_modules/
+.npm
+.yarn/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+backend.log
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# Uploads
+uploads/
+*.mp3
+*.wav
+*.m4a
+
+# 第三方演示代码（独立维护）
+websdk-python-demo/
+http_demo/
+
+# Database
+*.db
+*.sqlite
+
+# Build
+dist/
+build/
+*.pyc
+
+# Temporary files
+*.tmp
+.cache/
