@@ -1,46 +1,147 @@
 """
 语音识别(ASR)服务
 
-讯飞开放平台录音文件转写API集成
-参考: https://office-api-ist-dx.iflyaisol.com
+讯飞开放平台语音识别API集成：
+1. 实时语音听写(流式版) WebSocket API - 用于实时语音识别
+2. 录音文件转写 API - 用于长音频文件识别
 
-讯飞API要求：
-- 音频格式：WAV (PCM)
+实时听写参考: https://doc.xfyun.cn/rest_api/语音听写（流式版）.html
+录音转写参考: https://office-api-ist-dx.iflyaisol.com
+
+音频格式要求：
 - 采样率：16000 Hz
 - 声道：单声道
 - 编码：16bit PCM
 """
 import base64
-import hmac
 import hashlib
+import hmac
 import json
 import os
-import uuid
-import time
 import random
+import socket
+import ssl
 import string
 import subprocess
+import time
+import uuid
 import wave
 from datetime import datetime
 from typing import Dict, Any, List, Optional
+from urllib.parse import urlencode
+from wsgiref.handlers import format_date_time
+from time import mktime
 import asyncio
 import httpx
 import logging
 import urllib.parse
+import websocket
 
 from app.config import settings
-from app.utils.errors import ThirdPartyException
+from app.utils.errors import ThirdPartyException, ValidationException
 from app.services.order_result import parse_order_result
 
 logger = logging.getLogger("xfyun")
 
 
+# ==================== 实时听写(流式版) WebSocket API ====================
+
+# 帧状态标识
+STATUS_FIRST_FRAME = 0
+STATUS_CONTINUE_FRAME = 1
+STATUS_LAST_FRAME = 2
+
+# WebSocket配置
+WS_URL = "wss://iat-api.xfyun.cn/v2/iat"
+AUDIO_FORMAT = "audio/L16;rate=16000"
+AUDIO_ENCODING = "raw"
+FRAME_SIZE = 1280  # 16kHz, 16bit, 40ms = 16000 * 16 / 8 * 0.04 = 1280 bytes
+FRAME_INTERVAL = 0.04  # 40ms
+
+
+def generate_auth_url() -> str:
+    """
+    生成讯飞ASR WebSocket鉴权URL
+
+    签名算法:
+    1. signature_origin = "host: iat-api.xfyun.cn\\ndate: {RFC1123时间}\\nGET /v2/iat HTTP/1.1"
+    2. signature_sha = HMAC-SHA256(APISecret, signature_origin)
+    3. signature = Base64(signature_sha)
+    4. authorization_origin = 'api_key="{api_key}", algorithm="hmac-sha256", headers="host date request-line", signature="{signature}"'
+    5. authorization = Base64(authorization_origin)
+    """
+    now = datetime.now()
+    date = format_date_time(mktime(now.timetuple()))
+
+    signature_origin = f"host: iat-api.xfyun.cn\ndate: {date}\nGET /v2/iat HTTP/1.1"
+    signature_sha = hmac.new(
+        settings.XFYUN_API_SECRET.encode('utf-8'),
+        signature_origin.encode('utf-8'),
+        digestmod=hashlib.sha256
+    ).digest()
+    signature = base64.b64encode(signature_sha).decode('utf-8')
+
+    authorization_origin = (
+        f'api_key="{settings.XFYUN_API_KEY}", algorithm="hmac-sha256", '
+        f'headers="host date request-line", signature="{signature}"'
+    )
+    authorization = base64.b64encode(authorization_origin.encode('utf-8')).decode('utf-8')
+
+    v = {
+        "authorization": authorization,
+        "date": date,
+        "host": "iat-api.xfyun.cn"
+    }
+    return f"{WS_URL}?{urlencode(v)}"
+
+
+def parse_asr_response(data: Dict[str, Any]) -> Optional[str]:
+    """
+    解析ASR响应数据，提取识别文字
+
+    Args:
+        data: ASR响应的JSON数据
+
+    Returns:
+        识别的文字内容，如果失败返回None
+    """
+    try:
+        code = data.get("code", -1)
+        if code != 0:
+            error_msg = data.get("message", "未知错误")
+            logger.error(f"[ASR] Response error: code={code}, message={error_msg}")
+            return None
+
+        result = data.get("data", {}).get("result", {})
+        ws = result.get("ws", [])
+
+        if not ws:
+            return ""
+
+        text = ""
+        for item in ws:
+            for cw in item.get("cw", []):
+                text += cw.get("w", "")
+
+        return text
+    except Exception as e:
+        logger.error(f"[ASR] Parse response error: {str(e)}", exc_info=True)
+        return None
+
+
 class ASRService:
-    """讯飞录音文件转写服务类"""
+    """
+    讯飞语音识别服务类
+
+    支持两种识别模式：
+    1. 实时语音识别 (recognize_realtime): 通过WebSocket流式接口，适用于实时语音输入
+    2. 录音文件转写 (recognize_file): 通过HTTP接口，适用于长音频文件识别
+    """
 
     MAX_RETRIES = 3
     RETRY_DELAY = 1.0
     API_TIMEOUT = 60.0
+    WS_TIMEOUT = 60.0  # WebSocket超时
 
     # 讯飞录音文件转写API (新版)
     LFASR_HOST = "https://office-api-ist-dx.iflyaisol.com"
@@ -168,6 +269,215 @@ class ASRService:
             raise Exception("音频转换超时")
         except FileNotFoundError:
             raise Exception("ffmpeg未安装，请先安装: brew install ffmpeg")
+
+    # ==================== 实时语音识别(WebSocket流式版) ====================
+
+    async def recognize_realtime(
+        self,
+        audio_data: bytes,
+        language: str = "zh_cn",
+        accent: str = "mandarin"
+    ) -> str:
+        """
+        实时语音识别
+
+        通过WebSocket流式接口实时识别语音，返回识别文字。
+
+        Args:
+            audio_data: 原始音频数据(PCM 16kHz, 16bit, 单声道)
+            language: 语种，如 "zh_cn"(中文), "en_us"(英文)
+            accent: 方言，如 "mandarin"(普通话)
+
+        Returns:
+            识别的文字内容
+
+        Raises:
+            ThirdPartyException: 讯飞API调用失败
+            ValidationException: 参数验证失败
+        """
+        if len(audio_data) == 0:
+            raise ValidationException("audio_data cannot be empty")
+
+        self.logger.info(f"[ASR] recognize_realtime called, audio size: {len(audio_data)} bytes")
+
+        last_error = None
+        for attempt in range(self.MAX_RETRIES):
+            try:
+                result = await self._recognize_realtime_sync(audio_data, language, accent)
+                self.logger.info(f"[ASR] recognize success, result length: {len(result)}")
+                return result
+            except Exception as e:
+                last_error = e
+                self.logger.warning(
+                    f"[ASR] recognize failed (attempt {attempt + 1}/{self.MAX_RETRIES}): {str(e)}"
+                )
+                if attempt < self.MAX_RETRIES - 1:
+                    await asyncio.sleep(self.RETRY_DELAY * (attempt + 1))
+
+        raise ThirdPartyException(
+            service="ASR",
+            message=f"语音识别失败，请稍后重试: {str(last_error)}",
+            original_error=last_error
+        )
+
+    async def _recognize_realtime_sync(
+        self,
+        audio_data: bytes,
+        language: str,
+        accent: str
+    ) -> str:
+        """
+        同步执行实时语音识别(在线程池中运行)
+
+        Args:
+            audio_data: 音频数据
+            language: 语种参数
+            accent: 方言参数
+
+        Returns:
+            识别文字
+        """
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(
+            None,
+            lambda: self._recognize_websocket(audio_data, language, accent)
+        )
+
+    def _recognize_websocket(
+        self,
+        audio_data: bytes,
+        language: str,
+        accent: str
+    ) -> str:
+        """
+        通过WebSocket执行实时语音识别
+
+        Args:
+            audio_data: 音频数据
+            language: 语种
+            accent: 方言
+
+        Returns:
+            识别文字
+        """
+        ws_url = generate_auth_url()
+        self.logger.debug(f"[ASR] WebSocket URL generated")
+
+        sslopt = {"cert_reqs": ssl.CERT_NONE}
+        ws = websocket.create_connection(ws_url, timeout=self.WS_TIMEOUT, sslopt=sslopt)
+        self.logger.info(f"[ASR] WebSocket connected")
+
+        try:
+            # 状态机: 0=第一帧, 1=中间帧, 2=最后一帧
+            status = STATUS_FIRST_FRAME
+            offset = 0
+            result_text = ""
+
+            while True:
+                # 计算本帧数据
+                end = min(offset + FRAME_SIZE, len(audio_data))
+                frame_data = audio_data[offset:end]
+
+                if status == STATUS_FIRST_FRAME:
+                    # 第一帧: 发送common + business + data
+                    request_payload = {
+                        "common": {
+                            "app_id": settings.XFYUN_APP_ID
+                        },
+                        "business": {
+                            "domain": "iat",
+                            "language": language,
+                            "accent": accent,
+                            "vinfo": 1,
+                            "eos": 10000
+                        },
+                        "data": {
+                            "status": STATUS_FIRST_FRAME,
+                            "format": AUDIO_FORMAT,
+                            "encoding": AUDIO_ENCODING,
+                            "audio": base64.b64encode(frame_data).decode('utf-8')
+                        }
+                    }
+                    ws.send(json.dumps(request_payload))
+                    self.logger.debug(f"[ASR] First frame sent, offset={offset}")
+                    status = STATUS_CONTINUE_FRAME
+
+                elif status == STATUS_CONTINUE_FRAME:
+                    if offset + FRAME_SIZE >= len(audio_data):
+                        # 最后一帧
+                        status = STATUS_LAST_FRAME
+                        request_payload = {
+                            "data": {
+                                "status": STATUS_LAST_FRAME,
+                                "format": AUDIO_FORMAT,
+                                "encoding": AUDIO_ENCODING,
+                                "audio": base64.b64encode(frame_data).decode('utf-8')
+                            }
+                        }
+                        ws.send(json.dumps(request_payload))
+                        self.logger.debug(f"[ASR] Last frame sent, offset={offset}")
+                        break
+                    else:
+                        # 中间帧
+                        request_payload = {
+                            "data": {
+                                "status": STATUS_CONTINUE_FRAME,
+                                "format": AUDIO_FORMAT,
+                                "encoding": AUDIO_ENCODING,
+                                "audio": base64.b64encode(frame_data).decode('utf-8')
+                            }
+                        }
+                        ws.send(json.dumps(request_payload))
+                        offset += FRAME_SIZE
+
+                # 模拟音频采样间隔
+                time.sleep(FRAME_INTERVAL)
+
+            # 接收识别结果
+            while True:
+                try:
+                    msg = ws.recv()
+                    if not msg:
+                        break
+
+                    data = json.loads(msg)
+                    self.logger.debug(f"[ASR] Received message: code={data.get('code')}")
+
+                    if data.get("code") != 0:
+                        error_msg = data.get("message", "未知错误")
+                        raise ThirdPartyException(
+                            service="ASR",
+                            message=f"语音识别失败: code={data.get('code')}, message={error_msg}",
+                            original_error=None
+                        )
+
+                    # 解析识别结果
+                    text = parse_asr_response(data)
+                    if text:
+                        result_text += text
+
+                    # 检查是否结束
+                    frame_status = data.get("data", {}).get("status", -1)
+                    if frame_status == 2:
+                        # 引擎返回最终结果
+                        self.logger.debug(f"[ASR] Final status received")
+                        break
+
+                except websocket.WebSocketTimeoutException:
+                    self.logger.error("[ASR] WebSocket timeout")
+                    raise ThirdPartyException(
+                        service="ASR",
+                        message="语音识别超时，请重试",
+                        original_error=None
+                    )
+
+            return result_text
+
+        finally:
+            ws.close()
+            self.logger.info(f"[ASR] WebSocket closed")
+
+    # ==================== 录音文件识别(HTTP API) ====================
 
     async def recognize_file(
         self,
@@ -449,21 +759,24 @@ class ASRService:
                     retry_count += 1
                     continue
 
-                # 转写状态：3=处理中，4=完成
+# 转写状态：3=处理中，4=完成, -1=已提交等待处理
                 process_status = result.get("content", {}).get("orderInfo", {}).get("status")
                 self.logger.debug(f"[ASR] Polling progress: status={process_status} (attempt {retry_count + 1}/{max_retry})")
 
                 if process_status == 4:
                     self.logger.info("[ASR] Transcription completed successfully")
                     return
+                elif process_status == -1:
+                    # -1 表示已提交，等待处理，继续轮询
+                    self.logger.debug("[ASR] Transcription submitted, waiting...")
+                    retry_count += 1
+                    continue
                 elif process_status not in [3, 4]:
                     raise ThirdPartyException(
                         service="ASR",
                         message=f"转写异常：状态码={process_status}, 描述={result.get('descInfo', '未知错误')}",
                         original_error=None
                     )
-
-                retry_count += 1
 
             except ThirdPartyException:
                 raise

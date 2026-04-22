@@ -38,8 +38,7 @@
         <router-link to="/ai-sister" class="action-card">
           <div class="action-icon" style="background: rgba(5, 150, 105, 0.1);">
             <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
-              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-              <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
             </svg>
           </div>
           <div class="action-info">
@@ -122,16 +121,7 @@
       <div class="ai-card">
         <div class="ai-content">
           <div class="ai-avatar">
-            <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-              <circle cx="24" cy="24" r="24" fill="url(#aiGradientHome)"/>
-              <path d="M16 20C16 16.6863 18.6863 14 22 14C25.3137 14 28 16.6863 28 20V22H22C18.6863 22 16 24.6863 16 28V34H32V28C32 24.6863 29.3137 22 26 22C22.6863 22 20 24.6863 20 28V32H16V20Z" fill="#1E293B"/>
-              <defs>
-                <linearGradient id="aiGradientHome" x1="0" y1="0" x2="48" y2="48">
-                  <stop stop-color="#0891B2"/>
-                  <stop offset="1" stop-color="#22D3EE"/>
-                </linearGradient>
-              </defs>
-            </svg>
+            <img src="/images/sisiter-avatar.jpg" alt="AI学姐" class="sisiter-avatar-round" />
           </div>
           <div class="ai-text">
             <h3>有问题？问问AI学姐</h3>
@@ -400,6 +390,13 @@ onMounted(async () => {
   height: 48px;
   border-radius: 14px;
   overflow: hidden;
+}
+
+.sisiter-avatar-round {
+  width: 48px;
+  height: 48px;
+  object-fit: cover;
+  border-radius: 50%;
 }
 
 .ai-text h3 {

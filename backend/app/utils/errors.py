@@ -91,15 +91,27 @@ def handle_app_errors(func):
     async def wrapper(*args, **kwargs):
         try:
             return await func(*args, **kwargs)
+        except HTTPException:
+            # HTTPException 直接抛出，不拦截
+            raise
         except AppException as e:
-            raise e
+            # AppException 转为 HTTPException 返回 JSON 响应
+            raise HTTPException(
+                status_code=e.status_code,
+                detail=e.to_dict()
+            )
         except Exception as e:
             logger.error(f"[{func.__name__}] Unexpected error: {str(e)}", exc_info=True)
-            raise AppException(
-                message="Internal server error",
-                code="INTERNAL_ERROR",
-                status_code=500,
-                details=str(e) if __debug__ else None
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail={
+                    "success": False,
+                    "error": {
+                        "code": "INTERNAL_ERROR",
+                        "message": "Internal server error",
+                        "details": str(e) if __debug__ else None
+                    }
+                }
             )
 
     return wrapper
