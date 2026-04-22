@@ -97,6 +97,21 @@
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </router-link>
+
+        <router-link to="/activity" class="action-card">
+          <div class="action-icon" style="background: rgba(245, 158, 11, 0.1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#F59E0B" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </div>
+          <div class="action-info">
+            <h3>活动助手</h3>
+            <p>策划方案与文案生成</p>
+          </div>
+          <svg class="action-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </router-link>
       </div>
     </div>
 
