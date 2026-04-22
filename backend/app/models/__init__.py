@@ -8,6 +8,7 @@ from app.models.chat import Conversation, Message
 from app.models.knowledge import KnowledgeBase
 from app.models.admin import AdminUser
 from app.models.timetable import CourseAIInsight, CourseReminder
+from app.models.translation import TranslationTask
 
 __all__ = [
     "BaseModel",
@@ -25,4 +26,5 @@ __all__ = [
     "AdminUser",
     "CourseAIInsight",
     "CourseReminder",
+    "TranslationTask",
 ]

@@ -82,6 +82,21 @@
             <polyline points="9 18 15 12 9 6"/>
           </svg>
         </router-link>
+
+        <router-link to="/translate" class="action-card">
+          <div class="action-icon" style="background: rgba(139, 92, 246, 0.1);">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#8B5CF6" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+          <div class="action-info">
+            <h3>智能翻译</h3>
+            <p>即时翻译文档导出</p>
+          </div>
+          <svg class="action-arrow" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="9 18 15 12 9 6"/>
+          </svg>
+        </router-link>
       </div>
     </div>
 

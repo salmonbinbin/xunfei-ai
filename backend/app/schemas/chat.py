@@ -80,3 +80,13 @@ class ChatHistoryResponse(BaseModel):
     """聊天历史响应"""
     conversations: List[ConversationResponse]
     messages: Optional[List[MessageResponse]] = None
+
+
+class VoiceResponse(BaseModel):
+    """语音识别响应"""
+    text: str = Field(..., description="识别出的文字")
+    conv_id: Optional[int] = Field(None, description="会话ID")
+    message_id: Optional[int] = Field(None, description="消息ID")
+    content: Optional[str] = Field(None, description="AI回复内容（可选）")
+    sentiment: Optional[str] = Field(None, description="情感分析结果")
+    latency_ms: Optional[int] = Field(None, description="处理延迟")

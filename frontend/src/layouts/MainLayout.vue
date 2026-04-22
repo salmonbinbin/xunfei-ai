@@ -116,6 +116,14 @@ const ReviewIcon = {
   }
 }
 
+const TranslateIcon = {
+  render() {
+    return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
+      h('path', { 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'stroke-width': '2', d: 'M5 12h14M12 5l7 7-7 7' })
+    ])
+  }
+}
+
 const ProfileIcon = {
   render() {
     return h('svg', { fill: 'none', stroke: 'currentColor', viewBox: '0 0 24 24' }, [
@@ -128,6 +136,7 @@ const navItems = [
   { name: '首页', path: '/' },
   { name: '课表', path: '/timetable' },
   { name: 'AI学姐', path: '/ai-sister' },
+  { name: '智能翻译', path: '/translate' },
   { name: '录音回顾', path: '/review' },
   { name: '我的', path: '/profile' }
 ]
@@ -136,6 +145,7 @@ const bottomNavItems = [
   { name: '首页', path: '/', icon: HomeIcon },
   { name: '课表', path: '/timetable', icon: TimetableIcon },
   { name: 'AI学姐', path: '/ai-sister', icon: ChatIcon },
+  { name: '智能翻译', path: '/translate', icon: TranslateIcon },
   { name: '回顾', path: '/review', icon: ReviewIcon },
   { name: '我的', path: '/profile', icon: ProfileIcon }
 ]

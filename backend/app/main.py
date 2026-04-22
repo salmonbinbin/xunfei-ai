@@ -13,7 +13,7 @@ import time
 import uuid
 import os
 
-from app.routers import auth, chat, timetable, schedule, review, export, admin
+from app.routers import auth, chat, timetable, schedule, review, export, admin, translate
 from app.utils.logging import setup_logger, api_logger
 from app.config import settings
 
@@ -107,6 +107,7 @@ app.include_router(schedule.router)
 app.include_router(review.router)
 app.include_router(export.router)
 app.include_router(admin.router)
+app.include_router(translate.router)
 
 
 @app.get("/")

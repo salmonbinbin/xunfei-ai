@@ -25,6 +25,7 @@ const routes = [
       { path: 'schedule', name: 'Schedule', component: () => import('@/views/Schedule.vue') },
       { path: 'review', name: 'Review', component: () => import('@/views/Review.vue') },
       { path: 'review/:id', name: 'ReviewDetail', component: () => import('@/views/ReviewDetail.vue') },
+      { path: 'translate', name: 'Translate', component: () => import('@/views/Translate.vue') },
       { path: 'course-advisor', name: 'CourseAdvisor', component: () => import('@/views/CourseAdvisor.vue') },
       { path: 'activity', name: 'Activity', component: () => import('@/views/Activity.vue') },
       { path: 'ai-sister', name: 'AISister', component: () => import('@/views/AISister.vue') },

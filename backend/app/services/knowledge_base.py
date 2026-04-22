@@ -26,14 +26,15 @@ class KnowledgeBase:
         self.collection_name = "knowledge_base"
 
         if CHROMA_AVAILABLE:
-            self.client = chromadb.Client(Settings(
-                persist_directory=settings.CHROMA_DB_PATH,
-                anonymized_telemetry=False
-            ))
+            # 使用PersistentClient支持数据持久化
+            import os
+            os.makedirs(settings.CHROMA_DB_PATH, exist_ok=True)
+            self.client = chromadb.PersistentClient(path=settings.CHROMA_DB_PATH)
             self.collection = self.client.get_or_create_collection(
                 name=self.collection_name,
                 metadata={"description": "AI小商校园知识库"}
             )
+            self.logger.info(f"[KnowledgeBase] Initialized with persistent path: {settings.CHROMA_DB_PATH}")
         else:
             self.client = None
             self.collection = None
@@ -53,16 +54,12 @@ class KnowledgeBase:
             id: 知识ID
             text: 知识文本内容
             metadata: 元数据( category, source等 )
-            vector: 向量(可选，不传则使用默认embedding)
+            vector: 向量(可选，不传则使用ChromaDB自动embedding)
 
         Returns:
             是否添加成功
         """
         self.logger.info(f"[KnowledgeBase] add called, id: {id}")
-
-        # TODO: 实现向量化和存储
-        # 1. 如果没有提供向量，使用embedding模型向量化
-        # 2. 存储到ChromaDB
 
         if not CHROMA_AVAILABLE:
             self.logger.warning("[KnowledgeBase] ChromaDB not available, skipping")
@@ -73,11 +70,72 @@ class KnowledgeBase:
                 ids=[id],
                 documents=[text],
                 metadatas=[metadata],
-                embeddings=[vector] if vector else None
+                embeddings=[vector] if vector else None  # None则使用ChromaDB内置embedding
             )
             return True
         except Exception as e:
             self.logger.error(f"[KnowledgeBase] Failed to add: {str(e)}")
+            return False
+
+    def add_batch(self, docs: List[Dict[str, Any]]) -> int:
+        """
+        批量添加知识条目
+
+        Args:
+            docs: 文档列表，每个文档包含 id, text, metadata
+
+        Returns:
+            成功添加的数量
+        """
+        self.logger.info(f"[KnowledgeBase] add_batch called with {len(docs)} documents")
+
+        if not CHROMA_AVAILABLE:
+            self.logger.warning("[KnowledgeBase] ChromaDB not available, skipping")
+            return 0
+
+        if not docs:
+            return 0
+
+        try:
+            ids = [doc["id"] for doc in docs]
+            texts = [doc["text"] for doc in docs]
+            metadatas = [doc["metadata"] for doc in docs]
+
+            self.collection.add(
+                ids=ids,
+                documents=texts,
+                metadatas=metadatas
+            )
+
+            self.logger.info(f"[KnowledgeBase] Batch add successful: {len(docs)} documents")
+            return len(docs)
+        except Exception as e:
+            self.logger.error(f"[KnowledgeBase] Batch add failed: {str(e)}")
+            return 0
+
+    def clear(self) -> bool:
+        """
+        清空知识库（删除所有文档）
+
+        Returns:
+            是否清空成功
+        """
+        self.logger.info(f"[KnowledgeBase] clear called")
+
+        if not CHROMA_AVAILABLE:
+            return False
+
+        try:
+            # 删除整个collection然后重建
+            self.client.delete_collection(name=self.collection_name)
+            self.collection = self.client.get_or_create_collection(
+                name=self.collection_name,
+                metadata={"description": "AI小商校园知识库"}
+            )
+            self.logger.info("[KnowledgeBase] Knowledge base cleared")
+            return True
+        except Exception as e:
+            self.logger.error(f"[KnowledgeBase] Clear failed: {str(e)}")
             return False
 
     def search(
