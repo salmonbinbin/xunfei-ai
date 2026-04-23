@@ -248,7 +248,11 @@
         </div>
 
         <div class="result-content" v-if="result">
-          <pre class="result-text">{{ result }}</pre>
+          <textarea
+            class="result-textarea"
+            v-model="editedResult"
+            placeholder="生成的文案将显示在这里，你可以自由编辑修改"
+          ></textarea>
         </div>
 
         <div class="result-placeholder" v-else>
@@ -305,6 +309,7 @@ const tabs = [
 const activeTab = ref('plan')
 const loading = ref(false)
 const result = ref('')
+const editedResult = ref('')
 const showFeishuDialog = ref(false)
 const selectedGroup = ref('')
 const groups = ref([])
@@ -357,6 +362,7 @@ async function generatePlan() {
 
   loading.value = true
   result.value = ''
+  editedResult.value = ''
 
   try {
     const apiData = {
@@ -369,6 +375,7 @@ async function generatePlan() {
     }
     const { data } = await generatePlanApi(apiData)
     result.value = data.plan || data.result || data
+    editedResult.value = result.value
   } catch (error) {
     console.error('生成策划方案失败:', error)
     ElMessage.error('生成策划方案失败，请稍后重试')
@@ -386,6 +393,7 @@ async function generateCopy() {
 
   loading.value = true
   result.value = ''
+  editedResult.value = ''
 
   try {
     const apiData = {
@@ -396,6 +404,7 @@ async function generateCopy() {
     }
     const { data } = await generateCopyApi(apiData)
     result.value = data.copy || data.result || data
+    editedResult.value = result.value
   } catch (error) {
     console.error('生成宣传文案失败:', error)
     ElMessage.error('生成宣传文案失败，请稍后重试')
@@ -406,8 +415,8 @@ async function generateCopy() {
 
 // 复制结果
 function copyResult() {
-  if (!result.value) return
-  navigator.clipboard.writeText(result.value).then(() => {
+  if (!editedResult.value) return
+  navigator.clipboard.writeText(editedResult.value).then(() => {
     ElMessage.success('复制成功')
   }).catch(() => {
     ElMessage.error('复制失败')
@@ -416,7 +425,7 @@ function copyResult() {
 
 // 发送到飞书
 async function sendToFeishu() {
-  if (!result.value) return
+  if (!editedResult.value) return
   await loadGroups()
   showFeishuDialog.value = true
 }
@@ -432,7 +441,7 @@ async function confirmSendFeishu() {
     await sendFeishuApi({
       group_id: selectedGroup.value,
       title: activeTab.value === 'plan' ? `【活动策划】${planForm.theme}` : `【宣传文案】${copyForm.theme}`,
-      content: result.value
+      content: editedResult.value
     })
     ElMessage.success('发送成功')
     showFeishuDialog.value = false
@@ -788,14 +797,25 @@ async function confirmSendFeishu() {
   overflow-y: auto;
 }
 
-.result-text {
+.result-textarea {
+  width: 100%;
+  height: 100%;
+  min-height: 300px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  resize: none;
   white-space: pre-wrap;
   word-break: break-word;
   font-size: 14px;
   line-height: 1.8;
   color: #1E293B;
   font-family: inherit;
-  margin: 0;
+  outline: none;
+}
+
+.result-textarea::placeholder {
+  color: #CBD5E1;
 }
 
 .result-placeholder {
