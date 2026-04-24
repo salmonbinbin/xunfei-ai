@@ -22,6 +22,7 @@ class Course(BaseModel):
     ai_tip = Column(String(200), nullable=True)
     is_active = Column(Integer, default=1)
     course_date = Column(Date, nullable=True)  # 课程日期（根据学期开始日期计算）
+    source = Column(String(20), default="手动")  # 课程来源：手动/选课助手
 
     # 关系
     user = relationship("User", back_populates="courses")

@@ -1,157 +1,389 @@
 <template>
   <div class="course-advisor-page">
-    <!-- 返回和标题 -->
+    <!-- 页面头部 -->
     <div class="page-header">
       <router-link to="/" class="back-btn">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <polyline points="15 18 9 12 15 6"/>
         </svg>
       </router-link>
       <div class="header-text">
-        <h1 class="page-title">选课助手</h1>
+        <h1 class="page-title">智能选课助手</h1>
         <p class="page-subtitle">AI帮你找到最合适的课程</p>
       </div>
+      <div class="semester-select">
+        <el-select v-model="currentSemester" size="default" @change="onSemesterChange">
+          <el-option label="2024-2025学年 第一学期" value="2024-1"/>
+          <el-option label="2023-2024学年 第二学期" value="2023-2"/>
+          <el-option label="2023-2024学年 第一学期" value="2023-1"/>
+        </el-select>
+      </div>
     </div>
 
-    <!-- AI推荐卡片 -->
-    <div class="advisor-card">
-      <div class="advisor-header">
-        <div class="advisor-icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
-          </svg>
+    <!-- 主内容区 -->
+    <div class="main-content">
+      <!-- 左侧边栏 - 学生画像 -->
+      <aside class="sidebar">
+        <div class="sidebar-card profile-card">
+          <StudentRadar
+            :radar-data="store.radarData"
+            :ability-type="selectedAbilityType"
+            :profile-data="{
+              major: store.profile.major,
+              grade: store.profile.grade,
+              goal: store.profile.goal
+            }"
+            @update:abilityType="onAbilityTypeChange"
+          />
         </div>
-        <div class="advisor-info">
-          <h2>智能选课推荐</h2>
-          <p>基于你的专业和兴趣，AI为你推荐合适的课程</p>
+
+        <div class="sidebar-card chat-card">
+          <AIChatPanel
+            :messages="store.chatHistory"
+            :recommended-courses="store.suggestedCourses"
+            :loading="store.loading.chat"
+            @send="onChatSend"
+            @select-course="onCourseSelect"
+          />
         </div>
-      </div>
+      </aside>
 
-      <!-- 学期选择 -->
-      <div class="form-group">
-        <label>选择学期</label>
-        <select class="form-select" v-model="selectedSemester">
-          <option value="2024-1">2023-2024学年 第二学期</option>
-          <option value="2023-2">2023-2024学年 第一学期</option>
-          <option value="2023-1">2022-2023学年 第二学期</option>
-        </select>
-      </div>
+      <!-- 右侧内容区 -->
+      <main class="content-area">
+        <!-- 标签导航 -->
+        <div class="tab-nav">
+          <button
+            v-for="tab in tabs"
+            :key="tab.key"
+            class="tab-btn"
+            :class="{ active: currentTab === tab.key }"
+            @click="onTabChange(tab.key)"
+          >
+            <span class="tab-icon">{{ tab.icon }}</span>
+            <span class="tab-label">{{ tab.label }}</span>
+          </button>
+        </div>
 
-      <!-- 专业选择 -->
-      <div class="form-group">
-        <label>我的专业</label>
-        <select class="form-select" v-model="selectedMajor">
-          <option value="cs">计算机科学与技术</option>
-          <option value="se">软件工程</option>
-          <option value="ds">数据科学与大数据技术</option>
-        </select>
-      </div>
+        <!-- 选课时间表 -->
+        <div v-if="store.selectedCourseIds.length > 0" class="timeline-section">
+          <ScheduleTimeline
+            :selected-courses="selectedCourseDetails"
+            :conflicts="currentConflicts"
+          />
+        </div>
 
-      <button class="recommend-btn" @click="getRecommendations">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-        </svg>
-        获取推荐
-      </button>
-    </div>
-
-    <!-- 推荐课程列表 -->
-    <div class="recommendations-section">
-      <h2 class="section-title">为你推荐</h2>
-
-      <div class="course-list">
-        <div v-for="course in recommendedCourses" :key="course.id" class="course-card">
-          <div class="course-main">
-            <div class="course-header">
-              <h3>{{ course.name }}</h3>
-              <div class="course-rating">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="#D97706">
-                  <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
-                </svg>
-                <span>{{ course.rating }}</span>
-              </div>
-            </div>
-            <p class="course-meta">{{ course.teacher }} · {{ course.credits }}学分</p>
-            <p class="course-desc">{{ course.description }}</p>
-
-            <div class="course-tags">
-              <span v-for="tag in course.tags" :key="tag" class="tag">{{ tag }}</span>
-            </div>
+        <!-- 推荐课程列表 -->
+        <div class="courses-section">
+          <div v-if="store.loading.recommendations" class="loading-state">
+            <div class="loading-spinner"></div>
+            <span>加载中...</span>
           </div>
 
-          <div class="course-footer">
-            <span class="enrollment">{{ course.enrolled }}/{{ course.capacity }}已选</span>
-            <button class="detail-btn">查看详情</button>
+          <div v-else-if="store.recommendedCourses.length === 0" class="empty-state">
+            <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="#CBD5E1" stroke-width="1.5">
+              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+            </svg>
+            <p>点击"智能推荐"获取选课建议</p>
+          </div>
+
+          <div v-else class="course-list">
+            <CourseCard
+              v-for="course in store.recommendedCourses"
+              :key="course.id"
+              :course="course"
+              :is-selected="store.selectedCourseIds.includes(course.id)"
+              @toggle-select="onToggleCourseSelect"
+              @show-detail="onShowCourseDetail"
+              @show-reason="onShowCourseReason"
+            />
+          </div>
+
+          <!-- 分页 -->
+          <div v-if="store.pagination.totalPages > 1" class="pagination">
+            <button
+              class="page-btn"
+              :disabled="store.pagination.page <= 1"
+              @click="onPageChange(store.pagination.page - 1)"
+            >
+              上一页
+            </button>
+            <span class="page-info">
+              第 {{ store.pagination.page }} / {{ store.pagination.totalPages }} 页
+              （共 {{ store.pagination.total }} 门课程）
+            </span>
+            <button
+              class="page-btn"
+              :disabled="store.pagination.page >= store.pagination.totalPages"
+              @click="onPageChange(store.pagination.page + 1)"
+            >
+              下一页
+            </button>
+          </div>
+        </div>
+
+        <!-- 已选课程确认区 -->
+        <div v-if="store.selectedCourseIds.length > 0" class="selection-footer">
+          <div class="selection-info">
+            <span class="selection-count">已选 {{ store.selectedCourseIds.length }} 门课程</span>
+            <span class="selection-credits">{{ selectedTotalCredits }} 学分</span>
+          </div>
+          <div class="selection-actions">
+            <button class="action-btn clear-btn" @click="clearSelection">清空</button>
+            <button class="action-btn submit-btn" @click="submitSelection">确认选课</button>
+          </div>
+        </div>
+      </main>
+    </div>
+
+    <!-- 课程详情弹窗 -->
+    <el-dialog v-model="showCourseDetail" title="课程详情" width="500px" class="course-detail-dialog">
+      <div v-if="selectedCourse" class="course-detail-content">
+        <div class="detail-header">
+          <h3>{{ selectedCourse.name }}</h3>
+          <div class="detail-rating">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="#D97706">
+              <path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/>
+            </svg>
+            <span>{{ selectedCourse.rating }}</span>
+          </div>
+        </div>
+
+        <div class="detail-info">
+          <div class="info-item">
+            <span class="info-label">授课教师</span>
+            <span class="info-value">{{ selectedCourse.teacher }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">学分</span>
+            <span class="info-value">{{ selectedCourse.credits }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">上课时间</span>
+            <span class="info-value">{{ formatSchedule(selectedCourse) }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">上课地点</span>
+            <span class="info-value">{{ selectedCourse.location || '待定' }}</span>
+          </div>
+          <div class="info-item">
+            <span class="info-label">已选/容量</span>
+            <span class="info-value">{{ selectedCourse.enrolled }}/{{ selectedCourse.capacity }}</span>
+          </div>
+        </div>
+
+        <div v-if="selectedCourse.description" class="detail-desc">
+          <h4>课程简介</h4>
+          <p>{{ selectedCourse.description }}</p>
+        </div>
+
+        <div v-if="courseDetailData?.prerequisites?.length" class="detail-prerequisites">
+          <h4>先修课程</h4>
+          <div class="prerequisite-list">
+            <span
+              v-for="p in courseDetailData.prerequisites"
+              :key="p.id"
+              class="prerequisite-item"
+              :class="{ completed: p.status === 'completed' }"
+            >
+              {{ p.name }}
+            </span>
           </div>
         </div>
       </div>
-    </div>
+    </el-dialog>
+
+    <!-- 推荐理由弹窗 -->
+    <el-dialog v-model="showCourseReason" title="推荐理由" width="450px" class="reason-dialog">
+      <div v-if="selectedCourse" class="reason-content">
+        <div class="reason-header">
+          <h3>{{ selectedCourse.name }}</h3>
+        </div>
+        <div class="reason-body">
+          <p>{{ selectedCourse.match_reason || '这门课程与您的学习目标和能力偏好相匹配。' }}</p>
+        </div>
+        <div class="reason-tags">
+          <span v-for="tag in selectedCourse.tags" :key="tag" class="tag">{{ tag }}</span>
+        </div>
+      </div>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref } from 'vue'
+import { ref, computed, onMounted } from 'vue'
+import { ElMessage } from 'element-plus'
+import { useCourseAdvisorStore } from '@/stores/courseAdvisor'
+import StudentRadar from '@/components/course-advisor/StudentRadar.vue'
+import CourseCard from '@/components/course-advisor/CourseCard.vue'
+import ScheduleTimeline from '@/components/course-advisor/ScheduleTimeline.vue'
+import AIChatPanel from '@/components/course-advisor/AIChatPanel.vue'
 
-const selectedSemester = ref('2024-1')
-const selectedMajor = ref('cs')
+const store = useCourseAdvisorStore()
 
-const recommendedCourses = ref([
-  {
-    id: 1,
-    name: '人工智能导论',
-    teacher: '张教授',
-    credits: 3,
-    rating: 4.9,
-    reviews: 328,
-    description: '介绍人工智能的基本概念、发展历程和核心技术，包括机器学习、深度学习、自然语言处理等方向。',
-    tags: ['热门', '核心课', '实践性强'],
-    enrolled: 85,
-    capacity: 100
-  },
-  {
-    id: 2,
-    name: '计算机网络',
-    teacher: '李教授',
-    credits: 3,
-    rating: 4.7,
-    reviews: 256,
-    description: '系统讲解计算机网络的基本原理、协议栈和实际应用，涵盖TCP/IP、HTTP、DNS等重要知识点。',
-    tags: ['必修', '考研相关'],
-    enrolled: 92,
-    capacity: 100
-  },
-  {
-    id: 3,
-    name: '数据库系统概论',
-    teacher: '王老师',
-    credits: 3,
-    rating: 4.8,
-    reviews: 289,
-    description: '数据库系统的基本概念、关系模型、SQL语言、数据库设计和事务管理等内容。',
-    tags: ['必修', '就业必备'],
-    enrolled: 78,
-    capacity: 90
+const selectedAbilityType = ref('逻辑型')
+
+const currentSemester = ref('2024-1')
+const currentTab = ref('recommend')
+const showCourseDetail = ref(false)
+const showCourseReason = ref(false)
+const selectedCourse = ref(null)
+const courseDetailData = ref(null)
+
+const tabs = [
+  { key: 'recommend', label: 'AI智能推荐', icon: '✨' },
+  { key: 'mandatory', label: '必修课程', icon: '📚' },
+  { key: 'elective', label: '选修课程', icon: '🎯' },
+  { key: 'cross_major', label: '跨专业选修', icon: '🌐' },
+  { key: 'my_selected', label: '我的已选', icon: '📋' }
+]
+
+const selectedCourseDetails = computed(() =>
+  store.recommendedCourses.filter(c => store.selectedCourseIds.includes(c.id))
+)
+
+const selectedTotalCredits = computed(() =>
+  selectedCourseDetails.value.reduce((sum, c) => sum + (c.credits || 0), 0)
+)
+
+const currentConflicts = computed(() => store.detectConflicts())
+
+onMounted(async () => {
+  await store.fetchProfile()
+  // 获取已选课程（用于雷达图动态计算）
+  await store.fetchMySelectedCourses()
+  // 默认加载AI智能推荐
+  await store.fetchRecommendations('all')
+})
+
+function onAbilityTypeChange(type) {
+  selectedAbilityType.value = type
+}
+
+function onSemesterChange(semester) {
+  store.setSemester(semester)
+  store.fetchRecommendations(currentTab.value === 'recommend' ? 'all' : currentTab.value, null, 1)
+}
+
+async function onTabChange(tab) {
+  currentTab.value = tab
+  if (tab === 'my_selected') {
+    // 我的已选 - 从store获取已选课程
+    await store.fetchMySelectedCourses()
+    return
   }
-])
+  const categoryMap = {
+    recommend: 'all',
+    mandatory: 'mandatory',
+    elective: 'elective',
+    cross_major: 'cross_major'
+  }
+  await store.fetchRecommendations(categoryMap[tab])
+}
 
-function getRecommendations() {
-  alert('推荐功能开发中...')
+async function onPageChange(page) {
+  await store.fetchRecommendations(currentTab.value === 'recommend' ? 'all' : currentTab.value, null, page)
+}
+
+function onToggleCourseSelect(courseId) {
+  store.toggleCourseSelection(courseId)
+}
+
+function onShowCourseDetail(course) {
+  selectedCourse.value = course
+  courseDetailData.value = store.fetchCourseDetail(course.id)
+  showCourseDetail.value = true
+}
+
+function onShowCourseReason(course) {
+  selectedCourse.value = course
+  showCourseReason.value = true
+}
+
+async function onChatSend(message) {
+  await store.sendChat(message)
+}
+
+async function onCourseSelect(course) {
+  // 先尝试在当前推荐列表中查找匹配课程
+  let matchedCourse = store.recommendedCourses.find(c => c.name === course.name)
+
+  if (matchedCourse) {
+    // 使用匹配课程的ID进行选择
+    store.toggleCourseSelection(matchedCourse.id)
+    return
+  }
+
+  // 从已选课程中查找
+  matchedCourse = store.mySelectedCourses.find(c => c.name === course.name)
+  if (matchedCourse) {
+    store.toggleCourseSelection(matchedCourse.id)
+    return
+  }
+
+  // 尝试通过API根据课程名称搜索课程目录获取完整信息
+  try {
+    const response = await store.searchCourseByName(course.name)
+    if (response && response.data && response.data.success) {
+      const catalogCourse = response.data.course
+      if (catalogCourse) {
+        // 添加到推荐列表
+        store.recommendedCourses.push({
+          ...catalogCourse,
+          match_reason: course.match_reason || '',
+          conflict_status: 'none'
+        })
+        // 选课
+        store.toggleCourseSelection(catalogCourse.id)
+        return
+      }
+    }
+  } catch (e) {
+    console.warn('[CourseAdvisor] 无法找到课程:', course.name)
+  }
+
+  // 如果还是找不到，使用课程名称作为临时选择（用于显示）
+  if (course.name) {
+    ElMessage.warning(`课程"${course.name}"不在课程目录中，无法选课`)
+  }
+}
+
+function clearSelection() {
+  store.selectedCourseIds.splice(0, store.selectedCourseIds.length)
+}
+
+async function submitSelection() {
+  const result = await store.submitSelection()
+  if (result) {
+    ElMessage.success('选课方案已保存')
+    if (result.conflicts?.length > 0) {
+      ElMessage.warning(`检测到 ${result.conflicts.length} 个时间冲突`)
+    }
+    store.selectedCourseIds.splice(0, store.selectedCourseIds.length)
+  }
+}
+
+function formatSchedule(course) {
+  const days = ['', '周一', '周二', '周三', '周四', '周五', '周六', '周日']
+  const day = days[course.day_of_week] || '未知'
+  return `${day} ${course.start_slot}-${course.end_slot}节`
 }
 </script>
 
 <style scoped>
 .course-advisor-page {
+  min-height: 100vh;
+  background: #F8FAFC;
   padding: 24px;
-  max-width: 800px;
-  margin: 0 auto;
 }
 
 .page-header {
   display: flex;
   align-items: center;
   gap: 16px;
-  margin-bottom: 28px;
+  margin-bottom: 24px;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .back-btn {
@@ -160,133 +392,159 @@ function getRecommendations() {
   display: flex;
   align-items: center;
   justify-content: center;
-  background: #292524;
-  border: 1px solid rgba(217, 119, 6, 0.1);
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
   border-radius: 12px;
-  color: #A8A29E;
+  color: #64748B;
   text-decoration: none;
   transition: all 0.2s ease;
 }
 
 .back-btn:hover {
-  background: rgba(217, 119, 6, 0.1);
-  color: #D97706;
+  border-color: #0891B2;
+  color: #0891B2;
+}
+
+.header-text {
+  flex: 1;
 }
 
 .page-title {
   font-size: 24px;
   font-weight: 700;
-  color: #F5F1EB;
+  color: #1E293B;
   margin-bottom: 2px;
 }
 
 .page-subtitle {
   font-size: 14px;
-  color: #A8A29E;
+  color: #64748B;
 }
 
-.advisor-card {
-  background: #292524;
-  border: 1px solid rgba(217, 119, 6, 0.1);
-  border-radius: 20px;
-  padding: 24px;
-  margin-bottom: 28px;
+.semester-select {
+  width: 200px;
 }
 
-.advisor-header {
+.main-content {
   display: flex;
-  align-items: center;
-  gap: 16px;
-  margin-bottom: 24px;
-  padding-bottom: 20px;
-  border-bottom: 1px solid rgba(217, 119, 6, 0.1);
+  gap: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
 }
 
-.advisor-icon {
-  width: 56px;
-  height: 56px;
-  background: linear-gradient(135deg, #D97706, #F59E0B);
-  border-radius: 16px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #1C1917;
+.sidebar {
+  width: 320px;
   flex-shrink: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 }
 
-.advisor-info h2 {
-  font-size: 18px;
-  font-weight: 600;
-  color: #F5F1EB;
-  margin-bottom: 4px;
+.sidebar-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 16px;
 }
 
-.advisor-info p {
-  font-size: 14px;
-  color: #A8A29E;
+.profile-card {
+  padding: 0;
+  overflow: hidden;
 }
 
-.form-group {
-  margin-bottom: 16px;
+.chat-card {
+  overflow: hidden;
 }
 
-.form-group label {
-  display: block;
-  font-size: 13px;
-  color: #A8A29E;
-  margin-bottom: 8px;
+.content-area {
+  flex: 1;
+  min-width: 0;
 }
 
-.form-select {
-  width: 100%;
-  padding: 12px 16px;
-  background: rgba(28, 25, 23, 0.8);
-  border: 1px solid rgba(217, 119, 6, 0.15);
-  border-radius: 10px;
-  color: #F5F1EB;
-  font-size: 15px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.tab-nav {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  background: #FFFFFF;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid #E2E8F0;
 }
 
-.form-select:focus {
-  outline: none;
-  border-color: #D97706;
-  box-shadow: 0 0 0 3px rgba(217, 119, 6, 0.1);
-}
-
-.recommend-btn {
-  width: 100%;
+.tab-btn {
+  flex: 1;
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 8px;
-  padding: 14px;
-  background: linear-gradient(135deg, #D97706, #F59E0B);
+  gap: 6px;
+  padding: 12px 16px;
+  background: transparent;
   border: none;
-  border-radius: 12px;
-  color: #1C1917;
-  font-size: 16px;
-  font-weight: 600;
+  border-radius: 8px;
   cursor: pointer;
   transition: all 0.2s ease;
-  margin-top: 8px;
 }
 
-.recommend-btn:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(217, 119, 6, 0.3);
+.tab-btn.active {
+  background: linear-gradient(135deg, #0891B2, #22D3EE);
+  color: #fff;
 }
 
-.recommendations-section {
-  margin-top: 28px;
+.tab-btn:not(.active):hover {
+  background: #F1F5F9;
 }
 
-.section-title {
-  font-size: 18px;
-  font-weight: 600;
-  color: #F5F1EB;
-  margin-bottom: 16px;
+.tab-icon {
+  font-size: 16px;
+}
+
+.tab-label {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.timeline-section {
+  margin-bottom: 20px;
+}
+
+.courses-section {
+  min-height: 300px;
+}
+
+.loading-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #64748B;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid rgba(8, 145, 178, 0.2);
+  border-top-color: #0891B2;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 12px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #94A3B8;
+}
+
+.empty-state p {
+  margin-top: 16px;
+  font-size: 14px;
 }
 
 .course-list {
@@ -295,33 +553,125 @@ function getRecommendations() {
   gap: 16px;
 }
 
-.course-card {
-  background: #292524;
-  border: 1px solid rgba(217, 119, 6, 0.1);
-  border-radius: 16px;
-  padding: 20px;
+.pagination {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 0;
+  margin-top: 8px;
+}
+
+.page-btn {
+  padding: 8px 16px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 8px;
+  font-size: 14px;
+  color: #475569;
+  cursor: pointer;
   transition: all 0.2s ease;
 }
 
-.course-card:hover {
-  border-color: rgba(217, 119, 6, 0.2);
-  transform: translateY(-2px);
+.page-btn:hover:not(:disabled) {
+  background: #F1F5F9;
+  border-color: #0891B2;
+  color: #0891B2;
 }
 
-.course-header {
+.page-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.page-info {
+  font-size: 14px;
+  color: #64748B;
+}
+
+.selection-footer {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: 8px;
+  align-items: center;
+  padding: 16px 20px;
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 12px;
+  margin-top: 20px;
 }
 
-.course-header h3 {
-  font-size: 17px;
+.selection-info {
+  display: flex;
+  gap: 16px;
+}
+
+.selection-count {
+  font-size: 14px;
   font-weight: 600;
-  color: #F5F1EB;
+  color: #1E293B;
 }
 
-.course-rating {
+.selection-credits {
+  font-size: 14px;
+  color: #0891B2;
+  font-weight: 500;
+}
+
+.selection-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.action-btn {
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-btn {
+  background: #F1F5F9;
+  border: 1px solid #E2E8F0;
+  color: #64748B;
+}
+
+.clear-btn:hover {
+  background: #E2E8F0;
+  color: #475569;
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #0891B2, #22D3EE);
+  border: none;
+  color: #fff;
+}
+
+.submit-btn:hover {
+  box-shadow: 0 4px 12px rgba(8, 145, 178, 0.25);
+  transform: translateY(-1px);
+}
+
+/* 弹窗样式 */
+.course-detail-content {
+  padding: 8px;
+}
+
+.detail-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.detail-header h3 {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.detail-rating {
   display: flex;
   align-items: center;
   gap: 4px;
@@ -330,60 +680,129 @@ function getRecommendations() {
   color: #D97706;
 }
 
-.course-meta {
+.detail-info {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.info-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #F8FAFC;
+  border-radius: 8px;
+}
+
+.info-label {
   font-size: 13px;
-  color: #A8A29E;
+  color: #64748B;
+}
+
+.info-value {
+  font-size: 13px;
+  font-weight: 500;
+  color: #1E293B;
+}
+
+.detail-desc h4,
+.detail-prerequisites h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E293B;
   margin-bottom: 10px;
 }
 
-.course-desc {
-  font-size: 14px;
-  color: #D6D3D1;
+.detail-desc p {
+  font-size: 13px;
+  color: #475569;
   line-height: 1.6;
-  margin-bottom: 14px;
 }
 
-.course-tags {
+.prerequisite-list {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
+}
+
+.prerequisite-item {
+  padding: 4px 12px;
+  background: #F1F5F9;
+  border-radius: 16px;
+  font-size: 12px;
+  color: #64748B;
+}
+
+.prerequisite-item.completed {
+  background: rgba(5, 150, 105, 0.1);
+  color: #059669;
+}
+
+.reason-content {
+  padding: 8px;
+}
+
+.reason-header {
   margin-bottom: 16px;
+}
+
+.reason-header h3 {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+.reason-body {
+  padding: 16px;
+  background: #F8FAFC;
+  border-radius: 12px;
+  margin-bottom: 16px;
+}
+
+.reason-body p {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+}
+
+.reason-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .tag {
   padding: 4px 12px;
-  background: rgba(217, 119, 6, 0.1);
-  border-radius: 20px;
+  background: rgba(8, 145, 178, 0.08);
+  border: 1px solid rgba(8, 145, 178, 0.15);
+  border-radius: 12px;
   font-size: 12px;
-  color: #D97706;
+  color: #0891B2;
+}
+</style>
+
+<style>
+/* 全局覆盖 */
+.course-detail-dialog .el-dialog {
+  border-radius: 16px;
 }
 
-.course-footer {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding-top: 14px;
-  border-top: 1px solid rgba(217, 119, 6, 0.08);
+.course-detail-dialog .el-dialog__header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #F1F5F9;
 }
 
-.enrollment {
-  font-size: 13px;
-  color: #78716C;
+.reason-dialog .el-dialog {
+  border-radius: 16px;
 }
 
-.detail-btn {
-  padding: 8px 16px;
-  background: rgba(217, 119, 6, 0.1);
-  border: 1px solid rgba(217, 119, 6, 0.2);
-  border-radius: 8px;
-  color: #D97706;
-  font-size: 13px;
-  cursor: pointer;
-  transition: all 0.2s ease;
+.reason-dialog .el-dialog__header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #F1F5F9;
 }
 
-.detail-btn:hover {
-  background: rgba(217, 119, 6, 0.15);
-  border-color: rgba(217, 119, 6, 0.3);
+.el-select {
+  --el-select-input-focus-border-color: #0891B2;
 }
 </style>
