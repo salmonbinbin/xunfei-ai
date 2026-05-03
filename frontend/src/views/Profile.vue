@@ -1,19 +1,18 @@
 <template>
   <div class="profile-page">
+    <!-- 页面标题 -->
+    <div class="page-header">
+      <h1 class="page-title">我的</h1>
+    </div>
+
     <!-- 加载状态 -->
-    <div v-if="loading" class="loading-state">
+    <div v-if="pageLoading" class="loading-state">
       <div class="spinner"></div>
       <p>加载中...</p>
     </div>
 
     <template v-else>
-      <!-- 页面标题 -->
-      <div class="page-header">
-        <h1 class="page-title">个人中心</h1>
-        <p class="page-subtitle">管理你的个人信息和设置</p>
-      </div>
-
-      <!-- 用户信息卡片 -->
+      <!-- 个人信心卡片 -->
       <div class="profile-card">
         <div class="avatar-section">
           <div class="avatar-large">
@@ -21,46 +20,44 @@
           </div>
           <div class="user-info">
             <h2>{{ profile.nickname || '未设置昵称' }}</h2>
-            <p class="user-id">广州商学院 · {{ profile.major || '未设置专业' }}</p>
+            <p class="user-meta">
+              广州商学院
+              <span v-if="profile.major"> · {{ profile.major }}</span>
+              <span v-if="profile.grade"> · 大{{ profile.grade }}年级</span>
+            </p>
+            <div class="goal-selector-row">
+              <span class="goal-label">发展方向：</span>
+              <el-select
+                v-model="currentGoal"
+                placeholder="选择发展方向"
+                class="goal-select"
+                size="small"
+                @change="onGoalChange"
+              >
+                <el-option
+                  v-for="item in goalOptions"
+                  :key="item.value"
+                  :label="item.label"
+                  :value="item.value"
+                />
+              </el-select>
+            </div>
           </div>
-          <button class="edit-btn" @click="editProfile">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <button class="edit-btn" @click="openEditDialog">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/>
               <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/>
             </svg>
-            编辑
+            编辑资料
           </button>
-        </div>
-        <div class="info-grid">
-          <div class="info-item">
-            <label>手机号</label>
-            <span>{{ displayPhone }}</span>
-          </div>
-          <div class="info-item">
-            <label>年级</label>
-            <span>{{ profile.grade ? '大' + profile.grade + '年级' : '未设置' }}</span>
-          </div>
-          <div class="info-item">
-            <label>学习目标</label>
-            <span>{{ profile.goal || '未设置' }}</span>
-          </div>
-          <div class="info-item">
-            <label>绑定微信</label>
-            <span class="wechat-status">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="#07C160">
-                <path d="M8.691 2.188C3.891 2.188 0 5.476 0 9.53c0 2.212 1.17 4.203 3.002 5.55a.59.59 0 0 1 .213.665l-.39 1.48c-.019.07-.048.141-.048.213 0 .163.13.295.29.295a.326.326 0 0 0 .167-.054l1.903-1.114a.864.864 0 0 1 .717-.098 10.16 10.16 0 0 0 2.837.403c.276 0 .543-.027.811-.05-.857-2.578.157-4.972 1.932-6.446 1.703-1.415 3.882-1.98 5.853-1.838-.576-3.583-4.196-6.348-8.596-6.348zM5.785 5.991c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178A1.17 1.17 0 0 1 4.623 7.17c0-.651.52-1.18 1.162-1.18zm5.813 0c.642 0 1.162.529 1.162 1.18a1.17 1.17 0 0 1-1.162 1.178 1.17 1.17 0 0 1-1.162-1.178c0-.651.52-1.18 1.162-1.18zm5.34 2.867c-1.797-.052-3.746.512-5.28 1.786-1.72 1.428-2.687 3.72-1.78 6.22.942 2.453 3.666 4.229 6.884 4.229.826 0 1.622-.12 2.361-.336a.722.722 0 0 1 .598.082l1.584.926a.272.272 0 0 0 .14.047c.134 0 .24-.11.24-.245 0-.06-.023-.12-.038-.177l-.327-1.233a.582.582 0 0 1-.023-.156.49.49 0 0 1 .201-.398C23.024 18.48 24 16.82 24 14.98c0-3.21-2.931-5.837-6.656-6.088V8.89a4.538 4.538 0 0 0-.407-.032zm-1.562 2.458c.46 0 .833.378.833.844a.838.838 0 0 1-.833.844.838.838 0 0 1-.833-.844c0-.466.373-.844.833-.844zm4.844 0c.46 0 .833.378.833.844a.838.838 0 0 1-.833.844.838.838 0 0 1-.833-.844c0-.466.373-.844.833-.844z"/>
-              </svg>
-              {{ profile.wechatBound ? '已绑定' : '未绑定' }}
-            </span>
-          </div>
         </div>
       </div>
 
-      <!-- 数据统计 -->
+      <!-- 数据统计 3宫格 -->
       <div class="stats-grid">
         <div class="stat-card">
           <div class="stat-icon" style="background: rgba(8, 145, 178, 0.1);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2">
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
             </svg>
@@ -70,7 +67,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-icon" style="background: rgba(5, 150, 105, 0.1);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
               <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
               <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
               <line x1="12" y1="19" x2="12" y2="23"/>
@@ -80,81 +77,43 @@
           <div class="stat-label">录音回顾</div>
         </div>
         <div class="stat-card">
-          <div class="stat-icon" style="background: rgba(2, 132, 199, 0.1);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2">
-              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
-            </svg>
-          </div>
-          <div class="stat-value">{{ stats.conversations }}</div>
-          <div class="stat-label">AI对话</div>
-        </div>
-        <div class="stat-card">
           <div class="stat-icon" style="background: rgba(168, 85, 247, 0.1);">
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#A855F7" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2"/>
               <line x1="16" y1="2" x2="16" y2="6"/>
               <line x1="8" y1="2" x2="8" y2="6"/>
               <line x1="3" y1="10" x2="21" y2="10"/>
             </svg>
           </div>
-          <div class="stat-value">{{ stats.schedules }}</div>
-          <div class="stat-label">日程记录</div>
+          <div class="stat-value">{{ stats.conversations }}</div>
+          <div class="stat-label">AI对话</div>
         </div>
       </div>
 
-      <!-- 设置区域 -->
-      <div class="settings-section">
-        <h3 class="section-title">偏好设置</h3>
-        <div class="settings-list">
-          <div class="setting-item" @click="toggleVoice">
-            <div class="setting-left">
-              <div class="setting-icon" style="background: rgba(5, 150, 105, 0.1);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#059669" stroke-width="2">
-                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
-                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"/>
-                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"/>
-                </svg>
-              </div>
-              <div class="setting-text">
-                <span>语音播报</span>
-                <p>AI回答时自动朗读文字</p>
-              </div>
+      <!-- 最近活动时间线 -->
+      <div class="timeline-card">
+        <div class="timeline-header">
+          <span class="timeline-title">最近活动</span>
+        </div>
+        <div v-if="recentActivities.length === 0" class="timeline-empty">
+          <p>暂无最近活动</p>
+          <p class="empty-hint">开始使用AI小商，开启你的智慧校园生活吧</p>
+        </div>
+        <div v-else class="timeline-list">
+          <div
+            v-for="(activity, index) in recentActivities"
+            :key="index"
+            class="timeline-item"
+            @click="onActivityClick(activity)"
+          >
+            <div class="timeline-icon-wrap">
+              <span class="timeline-icon">{{ activity.icon }}</span>
+              <span v-if="index < recentActivities.length - 1" class="timeline-line"></span>
             </div>
-            <div :class="['toggle', { active: settings.voiceEnabled }]">
-              <div class="toggle-handle"></div>
-            </div>
-          </div>
-          <div class="setting-item" @click="toggleEmotion">
-            <div class="setting-left">
-              <div class="setting-icon" style="background: rgba(8, 145, 178, 0.1);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0891B2" stroke-width="2">
-                  <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
-                </svg>
-              </div>
-              <div class="setting-text">
-                <span>情感陪伴模式</span>
-                <p>更温暖的对话风格</p>
-              </div>
-            </div>
-            <div :class="['toggle', { active: settings.emotionMode }]">
-              <div class="toggle-handle"></div>
-            </div>
-          </div>
-          <div class="setting-item" @click="toggleNotification">
-            <div class="setting-left">
-              <div class="setting-icon" style="background: rgba(2, 132, 199, 0.1);">
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0284C7" stroke-width="2">
-                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/>
-                  <path d="M13.73 21a2 2 0 0 1-3.46 0"/>
-                </svg>
-              </div>
-              <div class="setting-text">
-                <span>课程提醒</span>
-                <p>课前15分钟推送通知</p>
-              </div>
-            </div>
-            <div :class="['toggle', { active: settings.notificationEnabled }]">
-              <div class="toggle-handle"></div>
+            <div class="timeline-content">
+              <div class="timeline-time">{{ activity.relativeTime }}</div>
+              <div class="timeline-item-title">{{ activity.title }}</div>
+              <div class="timeline-item-sub">{{ activity.subtitle }}</div>
             </div>
           </div>
         </div>
@@ -162,8 +121,8 @@
 
       <!-- 退出登录 -->
       <div class="actions-section">
-        <button class="btn-logout" @click="logout">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <button class="btn-logout" @click="showLogoutDialog = true">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
             <polyline points="16 17 21 12 16 7"/>
             <line x1="21" y1="12" x2="9" y2="12"/>
@@ -172,32 +131,123 @@
         </button>
       </div>
     </template>
+
+    <!-- 编辑资料弹窗 -->
+    <el-dialog
+      v-model="editDialogVisible"
+      title="编辑资料"
+      width="480px"
+      :close-on-click-modal="false"
+      class="edit-profile-dialog"
+    >
+      <el-form
+        ref="editFormRef"
+        :model="editForm"
+        :rules="editFormRules"
+        label-position="top"
+      >
+        <el-form-item label="昵称" prop="nickname">
+          <el-input
+            v-model="editForm.nickname"
+            placeholder="请输入昵称"
+            maxlength="20"
+            show-word-limit
+          />
+        </el-form-item>
+        <el-form-item label="专业" prop="major">
+          <el-input
+            v-model="editForm.major"
+            placeholder="请输入专业"
+            maxlength="100"
+          />
+        </el-form-item>
+        <el-form-item label="年级" prop="grade">
+          <el-select v-model="editForm.grade" placeholder="请选择年级" style="width: 100%;">
+            <el-option :value="1" label="大一年级" />
+            <el-option :value="2" label="大二年级" />
+            <el-option :value="3" label="大三年级" />
+            <el-option :value="4" label="大四年级" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="发展方向" prop="goal">
+          <el-select v-model="editForm.goal" placeholder="请选择发展方向" style="width: 100%;">
+            <el-option
+              v-for="item in goalOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="editDialogVisible = false">取消</el-button>
+        <el-button type="primary" :loading="saveLoading" @click="handleSaveProfile">
+          保存
+        </el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 退出登录确认 -->
+    <el-dialog
+      v-model="showLogoutDialog"
+      title="退出登录"
+      width="400px"
+      class="logout-dialog"
+    >
+      <p>确定要退出登录吗？</p>
+      <template #footer>
+        <el-button @click="showLogoutDialog = false">取消</el-button>
+        <el-button type="danger" :loading="logoutLoading" @click="handleLogout">
+          确定
+        </el-button>
+      </template>
+    </el-dialog>
   </div>
 </template>
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
+import { ElMessage } from 'element-plus'
 import { useUserStore } from '@/stores/user'
-import { getTodayCourses } from '@/api/timetable'
 import { getReviewList } from '@/api/review'
-import { getChatConversations } from '@/api/chat'
-import { getSchedules } from '@/api/schedule'
+import { getConversations } from '@/api/chat'
+import { getCourses } from '@/api/timetable'
 import logger from '@/utils/logger'
 
 const router = useRouter()
 const userStore = useUserStore()
 
+// 发展方向选项
+const goalOptions = [
+  { value: '考研', label: '考研' },
+  { value: '考公', label: '考公' },
+  { value: '就业', label: '就业' },
+  { value: '出国', label: '出国' },
+  { value: '未定', label: '未定' }
+]
+
+// 页面状态
+const pageLoading = ref(true)
+const saveLoading = ref(false)
+const logoutLoading = ref(false)
+const editDialogVisible = ref(false)
+const showLogoutDialog = ref(false)
+const editFormRef = ref(null)
+
+// 用户信息
 const profile = ref({
-  id: null,
   nickname: '',
-  phone: '',
   major: '',
   grade: null,
-  goal: '',
-  wechatBound: false
+  goal: null
 })
 
+// 发展方向本地副本（用于即时显示）
+const currentGoal = ref('')
+
+// 数据统计
 const stats = ref({
   courses: 0,
   reviews: 0,
@@ -205,118 +255,246 @@ const stats = ref({
   schedules: 0
 })
 
-const settings = ref({
-  voiceEnabled: true,
-  emotionMode: false,
-  notificationEnabled: true
+// 最近活动时间线
+const recentActivities = ref([])
+
+// 编辑表单
+const editForm = ref({
+  nickname: '',
+  major: '',
+  grade: null,
+  goal: ''
 })
 
-const loading = ref(true)
+// 表单验证规则
+const editFormRules = {
+  nickname: [
+    { required: true, message: '请输入昵称', trigger: 'blur' },
+    { max: 20, message: '昵称最多20个字符', trigger: 'blur' }
+  ],
+  major: [
+    { max: 100, message: '专业最多100个字符', trigger: 'blur' }
+  ],
+  grade: [
+    { required: true, message: '请选择年级', trigger: 'change' }
+  ],
+  goal: [
+    { required: true, message: '请选择发展方向', trigger: 'change' }
+  ]
+}
 
+// 计算属性
 const userInitials = computed(() => {
-  const name = profile.value.nickname || profile.value.phone || '用户'
+  const name = profile.value.nickname || '用户'
   return name.slice(0, 2).toUpperCase()
 })
 
-const displayPhone = computed(() => {
-  if (!profile.value.phone) return '未绑定'
-  const p = profile.value.phone
-  return p.slice(0, 3) + '****' + p.slice(-4)
-})
+// 相对时间格式化
+function formatRelativeTime(dateStr) {
+  if (!dateStr) return ''
+  const date = new Date(dateStr)
+  const now = new Date()
+  const diff = now - date
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
 
-onMounted(async () => {
-  await loadUserData()
-})
+  if (minutes < 1) return '刚刚'
+  if (minutes < 60) return `${minutes}分钟前`
+  if (hours < 24) return `${hours}小时前`
+  if (days === 1) return '昨天'
+  if (days < 7) return `${days}天前`
+  const monthDay = `${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`
+  return monthDay
+}
 
+// 加载用户数据
 async function loadUserData() {
-  loading.value = true
+  pageLoading.value = true
   try {
-    // 获取当前用户信息
     const userData = await userStore.fetchUser()
     if (userData) {
       profile.value = {
-        id: userData.id,
         nickname: userData.nickname || '',
-        phone: userData.phone || '',
         major: userData.profile?.major || '',
         grade: userData.profile?.grade || null,
-        goal: userData.profile?.goal || '',
-        wechatBound: !!userData.openid
+        goal: userData.profile?.goal || ''
       }
+      currentGoal.value = profile.value.goal || ''
+      logger.info('[Profile] User data loaded', {
+        id: userData.id,
+        hasProfile: userData.has_profile
+      })
     }
 
-    // 并行获取统计数据
     await Promise.all([
-      loadCoursesCount(),
-      loadReviewsCount(),
-      loadConversationsCount(),
-      loadSchedulesCount()
+      loadStats(),
+      loadRecentActivities()
     ])
   } catch (error) {
     logger.error('[Profile] Failed to load user data:', error)
   } finally {
-    loading.value = false
+    pageLoading.value = false
   }
 }
 
-async function loadCoursesCount() {
+// 加载统计数据
+async function loadStats() {
   try {
-    const { data } = await getTodayCourses()
-    // API返回的是课程数组
-    stats.value.courses = Array.isArray(data) ? data.length : (data.courses?.length || 0)
+    const [reviewRes, chatRes, courseRes] = await Promise.all([
+      getReviewList({ limit: 100, skip: 0 }).catch(() => ({ data: [] })),
+      getConversations().catch(() => ({ data: [] })),
+      getCourses().catch(() => ({ data: [] }))
+    ])
+
+    stats.value.reviews = Array.isArray(reviewRes.data) ? reviewRes.data.length : 0
+    stats.value.conversations = Array.isArray(chatRes.data) ? chatRes.data.length : 0
+    stats.value.courses = Array.isArray(courseRes.data) ? courseRes.data.length : 0
+
+    logger.debug('[Profile] Stats loaded', { stats: stats.value })
   } catch (error) {
-    logger.error('[Profile] Failed to load courses:', error)
+    logger.error('[Profile] Failed to load stats:', error)
   }
 }
 
-async function loadReviewsCount() {
+// 加载最近活动时间线
+async function loadRecentActivities() {
   try {
-    const { data } = await getReviewList(100, 0)
-    stats.value.reviews = Array.isArray(data) ? data.length : (data.total || 0)
+    const [reviewRes, chatRes] = await Promise.all([
+      getReviewList({ status: 'completed', limit: 3, skip: 0 }).catch(() => ({ data: [] })),
+      getConversations().catch(() => ({ data: [] }))
+    ])
+
+    const activities = []
+
+    // 录音回顾
+    if (Array.isArray(reviewRes.data)) {
+      reviewRes.data.slice(0, 3).forEach(item => {
+        activities.push({
+          type: 'review',
+          icon: '🎙️',
+          title: item.title || '录音回顾',
+          subtitle: item.record_type === 'course' ? '课程录音' : '会议录音',
+          time: item.updated_at || item.created_at,
+          relativeTime: formatRelativeTime(item.updated_at || item.created_at),
+          id: item.id,
+          url: `/review/${item.id}`
+        })
+      })
+    }
+
+    // AI对话
+    if (Array.isArray(chatRes.data)) {
+      chatRes.data.slice(0, 3).forEach(item => {
+        activities.push({
+          type: 'chat',
+          icon: '💬',
+          title: item.title || 'AI对话',
+          subtitle: `${item.message_count || 0}条消息`,
+          time: item.updated_at || item.created_at,
+          relativeTime: formatRelativeTime(item.updated_at || item.created_at),
+          id: item.id,
+          url: `/ai-sister?conv=${item.id}`
+        })
+      })
+    }
+
+    // 按时间倒序排序
+    activities.sort((a, b) => new Date(b.time) - new Date(a.time))
+    recentActivities.value = activities.slice(0, 5)
+
+    logger.debug('[Profile] Recent activities loaded', { count: recentActivities.value.length })
   } catch (error) {
-    logger.error('[Profile] Failed to load reviews:', error)
+    logger.error('[Profile] Failed to load recent activities:', error)
   }
 }
 
-async function loadConversationsCount() {
+// 发展方向变更（自动保存）
+async function onGoalChange(newGoal) {
+  logger.info('[Profile] Goal changing', { from: profile.value.goal, to: newGoal })
   try {
-    const { data } = await getChatConversations()
-    // 计算独立会话数
-    stats.value.conversations = Array.isArray(data) ? data.length : 0
+    await userStore.updateProfile({ goal: newGoal })
+    profile.value.goal = newGoal
+    ElMessage.success('发展方向已更新')
+    logger.info('[Profile] Goal updated successfully', { goal: newGoal })
   } catch (error) {
-    logger.error('[Profile] Failed to load conversations:', error)
+    // 失败后回滚选择
+    currentGoal.value = profile.value.goal
+    logger.error('[Profile] Goal update failed:', error)
   }
 }
 
-async function loadSchedulesCount() {
+// 打开编辑弹窗
+function openEditDialog() {
+  editForm.value = {
+    nickname: profile.value.nickname,
+    major: profile.value.major,
+    grade: profile.value.grade,
+    goal: profile.value.goal
+  }
+  editDialogVisible.value = true
+  logger.debug('[Profile] Edit dialog opened', { form: editForm.value })
+}
+
+// 保存资料
+async function handleSaveProfile() {
+  if (!editFormRef.value) return
+
+  await editFormRef.value.validate(async (valid) => {
+    if (!valid) return
+
+    saveLoading.value = true
+    try {
+      logger.info('[Profile] Saving profile', { data: editForm.value })
+      await userStore.updateProfile(editForm.value)
+
+      profile.value = {
+        nickname: editForm.value.nickname,
+        major: editForm.value.major,
+        grade: editForm.value.grade,
+        goal: editForm.value.goal
+      }
+      currentGoal.value = editForm.value.goal
+
+      editDialogVisible.value = false
+      ElMessage.success('资料完善成功')
+      logger.info('[Profile] Profile saved successfully')
+
+      await loadStats()
+    } catch (error) {
+      logger.error('[Profile] Profile save failed:', error)
+    } finally {
+      saveLoading.value = false
+    }
+  })
+}
+
+// 活动点击
+function onActivityClick(activity) {
+  logger.debug('[Profile] Activity clicked', { type: activity.type, id: activity.id })
+  if (activity.url) {
+    router.push(activity.url)
+  }
+}
+
+// 退出登录
+async function handleLogout() {
+  logoutLoading.value = true
   try {
-    const { data } = await getSchedules()
-    stats.value.schedules = Array.isArray(data) ? data.length : 0
+    logger.info('[Profile] User logging out')
+    userStore.logout()
+    showLogoutDialog.value = false
+    router.push('/login')
   } catch (error) {
-    logger.error('[Profile] Failed to load schedules:', error)
+    logger.error('[Profile] Logout failed:', error)
+  } finally {
+    logoutLoading.value = false
   }
 }
 
-function editProfile() {
-  alert('编辑资料功能开发中...')
-}
-
-function toggleVoice() {
-  settings.value.voiceEnabled = !settings.value.voiceEnabled
-}
-
-function toggleEmotion() {
-  settings.value.emotionMode = !settings.value.emotionMode
-}
-
-function toggleNotification() {
-  settings.value.notificationEnabled = !settings.value.notificationEnabled
-}
-
-function logout() {
-  userStore.logout()
-  router.push('/login')
-}
+onMounted(() => {
+  loadUserData()
+})
 </script>
 
 <style scoped>
@@ -326,8 +504,20 @@ function logout() {
   margin: 0 auto;
   background: #F8FAFC;
   min-height: 100vh;
+  padding-bottom: 100px;
 }
 
+.page-header {
+  margin-bottom: 24px;
+}
+
+.page-title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1E293B;
+}
+
+/* 加载状态 */
 .loading-state {
   display: flex;
   flex-direction: column;
@@ -355,22 +545,7 @@ function logout() {
   to { transform: rotate(360deg); }
 }
 
-.page-header {
-  margin-bottom: 28px;
-}
-
-.page-title {
-  font-size: 28px;
-  font-weight: 700;
-  color: #1E293B;
-  margin-bottom: 4px;
-}
-
-.page-subtitle {
-  font-size: 15px;
-  color: #64748B;
-}
-
+/* 个人信心卡片 */
 .profile-card {
   background: #FFFFFF;
   border: 1px solid #E2E8F0;
@@ -382,11 +557,8 @@ function logout() {
 
 .avatar-section {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: 16px;
-  margin-bottom: 24px;
-  padding-bottom: 24px;
-  border-bottom: 1px solid #E2E8F0;
 }
 
 .avatar-large {
@@ -414,9 +586,26 @@ function logout() {
   margin-bottom: 4px;
 }
 
-.user-id {
+.user-meta {
   font-size: 14px;
   color: #64748B;
+  margin-bottom: 8px;
+}
+
+.goal-selector-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.goal-label {
+  font-size: 14px;
+  color: #64748B;
+}
+
+.goal-select {
+  width: 120px;
 }
 
 .edit-btn {
@@ -426,11 +615,12 @@ function logout() {
   padding: 10px 16px;
   background: rgba(8, 145, 178, 0.08);
   border: 1px solid rgba(8, 145, 178, 0.15);
-  border-radius: 10px;
+  border-radius: 12px;
   color: #0891B2;
   font-size: 14px;
   cursor: pointer;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
 .edit-btn:hover {
@@ -438,39 +628,12 @@ function logout() {
   border-color: rgba(8, 145, 178, 0.25);
 }
 
-.info-grid {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 20px;
-}
-
-.info-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.info-item label {
-  color: #94A3B8;
-  font-size: 13px;
-}
-
-.info-item span {
-  color: #475569;
-  font-size: 15px;
-}
-
-.wechat-status {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
+/* 数据统计3宫格 */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 12px;
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .stat-card {
@@ -489,9 +652,9 @@ function logout() {
 }
 
 .stat-icon {
-  width: 48px;
-  height: 48px;
-  margin: 0 auto 12px;
+  width: 44px;
+  height: 44px;
+  margin: 0 auto 10px;
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -510,107 +673,110 @@ function logout() {
   color: #64748B;
 }
 
-.settings-section {
-  margin-bottom: 24px;
+/* 时间线 */
+.timeline-card {
+  background: #FFFFFF;
+  border: 1px solid #E2E8F0;
+  border-radius: 20px;
+  padding: 20px 24px;
+  margin-bottom: 20px;
 }
 
-.section-title {
+.timeline-header {
+  margin-bottom: 20px;
+}
+
+.timeline-title {
   font-size: 16px;
   font-weight: 600;
   color: #1E293B;
-  margin-bottom: 12px;
-  padding-left: 4px;
 }
 
-.settings-list {
-  background: #FFFFFF;
-  border: 1px solid #E2E8F0;
-  border-radius: 16px;
-  overflow: hidden;
+.timeline-empty {
+  text-align: center;
+  padding: 32px 0;
+  color: #64748B;
 }
 
-.setting-item {
+.timeline-empty p {
+  margin-bottom: 4px;
+}
+
+.empty-hint {
+  font-size: 13px;
+  color: #94A3B8;
+}
+
+.timeline-list {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 16px 20px;
+  flex-direction: column;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 12px;
   cursor: pointer;
+  padding: 8px 0;
   transition: background 0.2s ease;
+  border-radius: 8px;
 }
 
-.setting-item:not(:last-child) {
-  border-bottom: 1px solid #F1F5F9;
-}
-
-.setting-item:hover {
+.timeline-item:hover {
   background: #F8FAFC;
 }
 
-.setting-left {
+.timeline-icon-wrap {
   display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 14px;
+  flex-shrink: 0;
 }
 
-.setting-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 10px;
+.timeline-icon {
+  font-size: 18px;
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  background: #F8FAFC;
+  border-radius: 50%;
 }
 
-.setting-text {
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
+.timeline-line {
+  width: 2px;
+  flex: 1;
+  min-height: 20px;
+  background: #E2E8F0;
+  margin-top: 6px;
 }
 
-.setting-text span {
-  color: #1E293B;
+.timeline-content {
+  flex: 1;
+  padding-bottom: 8px;
+}
+
+.timeline-time {
+  font-size: 12px;
+  color: #94A3B8;
+  margin-bottom: 2px;
+}
+
+.timeline-item-title {
   font-size: 15px;
   font-weight: 500;
+  color: #1E293B;
+  margin-bottom: 2px;
 }
 
-.setting-text p {
-  color: #94A3B8;
+.timeline-item-sub {
   font-size: 13px;
+  color: #94A3B8;
 }
 
-.toggle {
-  width: 44px;
-  height: 24px;
-  border-radius: 12px;
-  background: #E2E8F0;
-  position: relative;
-  transition: all 0.3s ease;
-  flex-shrink: 0;
-}
-
-.toggle.active {
-  background: linear-gradient(135deg, #0891B2, #22D3EE);
-}
-
-.toggle-handle {
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  background: white;
-  position: absolute;
-  top: 2px;
-  left: 2px;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
-}
-
-.toggle.active .toggle-handle {
-  left: 22px;
-}
-
+/* 退出登录 */
 .actions-section {
-  margin-top: 32px;
+  margin-top: 8px;
 }
 
 .btn-logout {
@@ -634,12 +800,45 @@ function logout() {
   border-color: rgba(239, 68, 68, 0.25);
 }
 
+/* Element Plus 弹窗样式覆盖 */
+:deep(.el-dialog) {
+  border-radius: 16px;
+}
+
+:deep(.el-dialog__header) {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid #F1F5F9;
+}
+
+:deep(.el-dialog__title) {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1E293B;
+}
+
+:deep(.el-dialog__body) {
+  padding: 24px;
+}
+
+:deep(.el-dialog__footer) {
+  padding: 16px 24px;
+  border-top: 1px solid #F1F5F9;
+}
+
+:deep(.el-form-item__label) {
+  font-weight: 500;
+  color: #475569;
+}
+
+:deep(.el-input__wrapper),
+:deep(.el-select__wrapper) {
+  border-radius: 10px;
+}
+
+/* 响应式 */
 @media (max-width: 768px) {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
-  }
-  .info-grid {
-    grid-template-columns: 1fr;
   }
   .avatar-section {
     flex-wrap: wrap;
@@ -648,6 +847,9 @@ function logout() {
     width: 100%;
     justify-content: center;
     margin-top: 8px;
+  }
+  .goal-selector-row {
+    flex-wrap: wrap;
   }
 }
 </style>
