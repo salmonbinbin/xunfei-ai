@@ -167,6 +167,12 @@
             {{ mode === 'login' ? '登录即表示同意' : '注册即表示同意' }}
             <a href="#" class="terms-link">《用户协议》</a>和<a href="#" class="terms-link">《隐私政策》</a>
           </p>
+
+          <!-- 教师端入口 -->
+          <div class="teacher-entrance">
+            <span class="teacher-entrance-text">我是教师</span>
+            <router-link to="/teacher/login" class="teacher-entrance-link">教师端入口</router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -627,6 +633,35 @@ async function handleSubmit() {
 }
 
 .terms-link:hover {
+  text-decoration: underline;
+}
+
+/* 教师端入口 */
+.teacher-entrance {
+  margin-top: 20px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.teacher-entrance-text {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.teacher-entrance-link {
+  font-size: 13px;
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.teacher-entrance-link:hover {
+  color: var(--primary-hover);
   text-decoration: underline;
 }
 
