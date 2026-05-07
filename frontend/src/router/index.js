@@ -22,13 +22,14 @@ const routes = [
   },
   {
     path: '/teacher',
-    component: () => import('@/layouts/MainLayout.vue'),
+    component: () => import('@/layouts/TeacherLayout.vue'),
     meta: { requiresAuth: true, role: 'teacher' },
     children: [
-      { path: '', redirect: '/teacher/grade' },
-      { path: 'grade', component: () => import('@/views/teacher/TeacherGrade.vue') },
-      { path: 'notification', component: () => import('@/views/teacher/TeacherNotification.vue') },
-      { path: 'lesson-plan', component: () => import('@/views/teacher/TeacherLessonPlan.vue') },
+      { path: '', name: 'TeacherHome', component: () => import('@/views/teacher/TeacherHome.vue') },
+      { path: 'grade', name: 'TeacherGrade', component: () => import('@/views/teacher/TeacherGrade.vue') },
+      { path: 'notification', name: 'TeacherNotification', component: () => import('@/views/teacher/TeacherNotification.vue') },
+      { path: 'lesson-plan', name: 'TeacherLessonPlan', component: () => import('@/views/teacher/TeacherLessonPlan.vue') },
+      { path: 'profile', name: 'TeacherProfile', component: () => import('@/views/teacher/TeacherProfile.vue') },
     ]
   },
   {
@@ -86,14 +87,30 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
+  // 学生用户需要完善资料才能进入完整功能
   if (to.meta.requiresProfile === false && userStore.isLoggedIn) {
     next()
     return
   }
 
+  // 只有学生用户且缺少资料时才重定向到 /guide
+  // 教师用户有自己的专属路由 /teacher，不需要引导页
   if (to.meta.requiresAuth && userStore.isLoggedIn && !userStore.hasProfile) {
-    next('/guide')
-    return
+    // 从 JWT token 中解码 role
+    const isTeacher = (() => {
+      try {
+        const token = userStore.token
+        if (!token) return false
+        const payload = JSON.parse(atob(token.split('.')[1]))
+        return payload.role === 'teacher'
+      } catch {
+        return false
+      }
+    })()
+    if (!isTeacher) {
+      next('/guide')
+      return
+    }
   }
 
   if (to.meta.requiresAuth && userStore.isLoggedIn && userStore.hasProfile) {

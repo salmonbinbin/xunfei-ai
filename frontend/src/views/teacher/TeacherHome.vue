@@ -1,33 +1,5 @@
 <template>
   <div class="teacher-home">
-    <!-- 顶部导航 -->
-    <header class="teacher-header">
-      <div class="header-content">
-        <div class="header-brand">
-          <svg width="32" height="32" viewBox="0 0 48 48" fill="none">
-            <rect width="48" height="48" rx="12" fill="url(#headerGrad)"/>
-            <circle cx="24" cy="18" r="6" fill="white" fill-opacity="0.95"/>
-            <path d="M14 34C14 29.5817 18.4183 26 24 26H28C33.5817 26 38 29.5817 38 34V35H14V34Z" fill="white" fill-opacity="0.95"/>
-            <defs>
-              <linearGradient id="headerGrad" x1="0" y1="0" x2="48" y2="48">
-                <stop stop-color="#0891B2"/>
-                <stop offset="1" stop-color="#22D3EE"/>
-              </linearGradient>
-            </defs>
-          </svg>
-          <span class="brand-text">AI小商教师端</span>
-        </div>
-        <button @click="handleLogout" class="logout-btn">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-            <polyline points="16 17 21 12 16 7"/>
-            <line x1="21" y1="12" x2="9" y2="12"/>
-          </svg>
-          <span>退出</span>
-        </button>
-      </div>
-    </header>
-
     <!-- 主内容区 -->
     <main class="main-content">
       <div class="welcome-section">
@@ -121,13 +93,8 @@ import { useUserStore } from '@/stores/user'
 const router = useRouter()
 const userStore = useUserStore()
 
-function handleLogout() {
-  userStore.logout()
-  router.push('/teacher/login')
-}
-
 function handleCardClick(type) {
-  ElMessage.info('功能开发中')
+  router.push(`/teacher/${type}`)
 }
 </script>
 
@@ -135,56 +102,6 @@ function handleCardClick(type) {
 .teacher-home {
   min-height: 100vh;
   background: #F8FAFC;
-}
-
-.teacher-header {
-  background: #FFFFFF;
-  border-bottom: 1px solid #E2E8F0;
-  position: sticky;
-  top: 0;
-  z-index: 100;
-}
-
-.header-content {
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: 0 24px;
-  height: 64px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.header-brand {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-.brand-text {
-  font-size: 18px;
-  font-weight: 600;
-  color: #1E293B;
-}
-
-.logout-btn {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 16px;
-  background: transparent;
-  border: 1px solid #E2E8F0;
-  border-radius: 8px;
-  color: #64748B;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.logout-btn:hover {
-  color: #EF4444;
-  border-color: #FCA5A5;
-  background: #FEF2F2;
 }
 
 .main-content {
