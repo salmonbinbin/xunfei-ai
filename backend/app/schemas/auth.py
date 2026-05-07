@@ -23,6 +23,7 @@ class RegisterRequest(BaseModel):
 
 class ProfileRequest(BaseModel):
     """学生画像更新请求"""
+    nickname: Optional[str] = Field(None, description="昵称（最大20字符）", max_length=20)
     major: Optional[str] = Field(None, description="专业")
     grade: Optional[int] = Field(None, description="年级（1-4）")
     class_name: Optional[str] = Field(None, description="班级")

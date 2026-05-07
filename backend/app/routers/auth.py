@@ -154,12 +154,14 @@ async def update_profile(
     更新学生画像
 
     如果学生画像不存在则创建
+    同时更新用户昵称
     """
-    logger.info(f"[Auth] Update profile for user: {current_user.id}")
+    logger.info(f"[Auth] Update profile for user: {current_user.id} | nickname: {profile_data.nickname}, major: {profile_data.major}, grade: {profile_data.grade}, goal: {profile_data.goal}")
 
     # 验证goal值
     valid_goals = ["考研", "考公", "就业", "出国", "未定", None]
     if profile_data.goal not in valid_goals:
+        logger.warning(f"[Auth] Invalid goal value: {profile_data.goal}")
         raise ValidationException(
             message="goal参数无效",
             details={"valid_values": ["考研", "考公", "就业", "出国", "未定"]}
@@ -167,10 +169,24 @@ async def update_profile(
 
     # 验证grade值
     if profile_data.grade is not None and (profile_data.grade < 1 or profile_data.grade > 4):
+        logger.warning(f"[Auth] Invalid grade value: {profile_data.grade}")
         raise ValidationException(
             message="grade参数无效",
             details={"valid_values": [1, 2, 3, 4]}
         )
+
+    # 验证nickname长度
+    if profile_data.nickname is not None and len(profile_data.nickname) > 20:
+        logger.warning(f"[Auth] Invalid nickname length: {len(profile_data.nickname)}")
+        raise ValidationException(
+            message="nickname参数无效",
+            details={"max_length": 20}
+        )
+
+    # 更新用户昵称
+    if profile_data.nickname is not None:
+        current_user.nickname = profile_data.nickname
+        logger.info(f"[Auth] User nickname updated: {current_user.id} -> {profile_data.nickname}")
 
     # 查找或创建学生画像
     result = await db.execute(
@@ -203,6 +219,7 @@ async def update_profile(
 
     await db.commit()
 
+    logger.info(f"[Auth] Profile update successful for user: {current_user.id}")
     return {
         "success": True,
         "message": "资料完善成功"

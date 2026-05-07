@@ -6,14 +6,16 @@ AI小商 - FastAPI应用入口
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.exceptions import RequestValidationError
 from starlette.middleware.base import BaseHTTPMiddleware
-from starlette.responses import FileResponse
+from starlette.responses import FileResponse, JSONResponse
 from contextlib import asynccontextmanager
 import time
 import uuid
 import os
 
-from app.routers import auth, chat, timetable, schedule, review, export, admin, translate
+from app.routers import auth, chat, timetable, schedule, review, export, admin, translate, activity, course_advisor, profile, recent
+from app.routers.teacher import teacher_auth_router
 from app.utils.logging import setup_logger, api_logger
 from app.config import settings
 
@@ -108,6 +110,32 @@ app.include_router(review.router)
 app.include_router(export.router)
 app.include_router(admin.router)
 app.include_router(translate.router)
+app.include_router(activity.router)
+app.include_router(course_advisor.router)
+app.include_router(profile.router)
+app.include_router(recent.router)
+app.include_router(teacher_auth_router)
+
+
+# 验证异常处理器 - 打印详细的验证错误日志
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """处理验证错误并记录详细日志"""
+    api_logger.error(
+        f"[ValidationError] {request.method} {request.url.path} - "
+        f"Errors: {exc.errors()}, Body: {exc.body}"
+    )
+    return JSONResponse(
+        status_code=422,
+        content={
+            "success": False,
+            "error": {
+                "code": "VALIDATION_ERROR",
+                "message": "请求数据验证失败",
+                "details": exc.errors()
+            }
+        }
+    )
 
 
 @app.get("/")

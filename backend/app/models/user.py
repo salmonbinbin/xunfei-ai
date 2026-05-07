@@ -1,6 +1,14 @@
-from sqlalchemy import Column, Integer, String, DateTime, Boolean, Integer, Numeric, JSON, ForeignKey, Text
+from sqlalchemy import Column, Integer, String, DateTime, Boolean, Integer, Numeric, JSON, ForeignKey, Text, Enum as SQLEnum
 from sqlalchemy.orm import relationship
 from app.models.base import BaseModel
+import enum
+
+
+class UserRole(enum.Enum):
+    """用户角色枚举"""
+    student = "student"
+    teacher = "teacher"
+    admin = "admin"
 
 
 class User(BaseModel):
@@ -16,9 +24,11 @@ class User(BaseModel):
     avatar_url = Column(String(500), nullable=True)
     is_active = Column(Integer, default=1)
     last_login = Column(DateTime, nullable=True)
+    role = Column(SQLEnum(UserRole), default=UserRole.student, nullable=False)
 
     # 关系
     student_profile = relationship("StudentProfile", back_populates="user", uselist=False)
+    teacher_profile = relationship("TeacherProfile", back_populates="user", uselist=False)
     courses = relationship("Course", back_populates="user")
     schedules = relationship("Schedule", back_populates="user")
     review_records = relationship("ReviewRecord", back_populates="user")

@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="zh-CN"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AI小商 - 智慧校园AI伙伴</title><script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script><script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script><script src="https://unpkg.com/@babel/standalone/babel.min.js" crossorigin></script><style>
+*{margin:0;padding:0;box-sizing:border-box}body{font-family:-apple-system,"PingFang SC","SF Pro Text","Helvetica Neue",sans-serif;background:#0a0a0f;color:#fff;overflow-x:hidden}
+.page{min-height:100vh}.hero{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 24px;position:relative}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 50% 30%,rgba(59,130,246,0.2) 0%,transparent 60%),radial-gradient(ellipse at 80% 80%,rgba(139,92,246,0.12) 0%,transparent 50%);pointer-events:none}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);border-radius:999px;padding:7px 18px;font-size:13px;color:rgba(255,255,255,0.7);margin-bottom:36px;backdrop-filter:blur(10px)}
+.badge-dot{width:7px;height:7px;background:#22c55e;border-radius:50%;animation:pulse 2s infinite}@keyframes pulse{0%,100%{opacity:1}50%{opacity:0.3}}
+.hero h1{font-size:clamp(44px,8vw,86px);font-weight:700;letter-spacing:-0.03em;line-height:1.06;margin-bottom:28px;background:linear-gradient(135deg,#fff 40%,rgba(255,255,255,0.55) 100%);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero h1 em{font-style:normal;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-desc{font-size:19px;color:rgba(255,255,255,0.45);max-width:540px;line-height:1.75;margin-bottom:52px}
+.hero-cta{display:inline-flex;align-items:center;gap:10px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:#fff;border:none;border-radius:14px;padding:16px 38px;font-size:16px;font-weight:600;cursor:pointer;transition:all .3s;box-shadow:0 0 50px rgba(59,130,246,0.35);text-decoration:none}
+.hero-cta:hover{transform:translateY(-3px);box-shadow:0 10px 50px rgba(59,130,246,0.55)}
+.hero-stats{display:flex;gap:48px;justify-content:center;margin-top:64px;flex-wrap:wrap}
+.hero-stat strong{display:block;font-size:32px;font-weight:700;background:linear-gradient(135deg,#60a5fa,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.hero-stat span{font-size:13px;color:rgba(255,255,255,0.4)}
+.divider{height:1px;background:linear-gradient(90deg,transparent,rgba(59,130,246,0.4),rgba(139,92,246,0.4),transparent)}
+.section{padding:100px 24px}
+.section-label{text-align:center;font-size:11px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:rgba(255,255,255,0.3);margin-bottom:14px}
+.section-title{text-align:center;font-size:clamp(26px,4vw,40px);font-weight:700;letter-spacing:-0.02em;margin-bottom:14px}
+.section-desc{text-align:center;font-size:15px;color:rgba(255,255,255,0.4);max-width:500px;margin:0 auto 60px;line-height:1.7}
+.screens-grid{display:flex;gap:36px;justify-content:center;flex-wrap:wrap;max-width:1180px;margin:0 auto;align-items:flex-end}
+.phone-wrap{flex:1;min-width:280px;max-width:360px;cursor:pointer;transition:transform .5s cubic-bezier(.25,.46,.45,.94)}
+.phone-wrap:hover{transform:translateY(-18px)}
+.phone-label{text-align:center;margin-top:16px;font-size:14px;color:rgba(255,255,255,0.4)}
+.phone-label strong{color:rgba(255,255,255,0.88);display:block;font-size:15px;margin-bottom:3px}
+.features-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(255px,1fr));gap:16px;max-width:1080px;margin:0 auto}
+.feature-card{background:rgba(255,255,255,0.03);border:1px solid rgba(255,255,255,0.08);border-radius:20px;padding:28px;transition:all .3s}
+.feature-card:hover{background:rgba(255,255,255,0.07);border-color:rgba(255,255,255,0.18);transform:translateY(-5px)}
+.feature-icon{width:48px;height:48px;border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:22px;margin-bottom:18px}
+.feature-card h3{font-size:16px;font-weight:600;margin-bottom:8px}
+.feature-card p{font-size:14px;color:rgba(255,255,255,0.4);line-height:1.65}
+.tech-badges{display:flex;gap:12px;justify-content:center;flex-wrap:wrap;max-width:860px;margin:0 auto}
+.tech-badge{display:flex;align-items:center;gap:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:10px 18px;font-size:13px;color:rgba(255,255,255,0.7);backdrop-filter:blur(8px);transition:all .2s}
+.tech-badge:hover{background:rgba(255,255,255,0.1);border-color:rgba(139,92,246,0.45)}
+.api-flow{max-width:760px;margin:0 auto;display:flex;flex-direction:column}
+.api-step{display:flex;gap:18px;align-items:flex-start;position:relative}
+.api-step:not(:last-child)::after{content:'';position:absolute;left:22px;top:50px;width:2px;height:calc(100% - 10px);background:linear-gradient(to bottom,rgba(59,130,246,0.5),rgba(139,92,246,0.2))}
+.api-num{width:46px;height:46px;border-radius:50%;background:linear-gradient(135deg,#3b82f6,#8b5cf6);display:flex;align-items:center;justify-content:center;font-weight:700;font-size:16px;flex-shrink:0;z-index:1}
+.api-content{flex:1;background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.08);border-radius:16px;padding:18px 22px;margin-bottom:18px}
+.api-content h4{font-size:14px;font-weight:600;margin-bottom:5px}
+.api-content p{font-size:13px;color:rgba(255,255,255,0.4);line-height:1.6}
+.api-content code{display:inline-block;background:rgba(59,130,246,0.15);color:#60a5fa;border-radius:6px;padding:2px 8px;font-size:12px;margin-top:7px;font-family:'SF Mono',monospace}
+.footer{text-align:center;padding:80px 24px;border-top:1px solid rgba(255,255,255,0.06)}
+.footer p{font-size:14px;color:rgba(255,255,255,0.28)}
+</style></head><body><div id="root"></div><script type="text/babel">
+const{useState,useEffect}=React;
+function IosFrame({children,w=375,h=700,time='9:41',dark=true}){
+const c=dark?'#000':'#fff';
+return React.createElement('div',{style:{display:'inline-block',padding:10,background:'#000',borderRadius:50,boxShadow:'0 0 0 2px #1f2937, 0 24px 64px rgba(0,0,0,0.55)'}},
+React.createElement('div',{style:{position:'relative',borderRadius:40,overflow:'hidden',background:'#fff',width:w,height:h}},
+React.createElement('div',{style:{position:'absolute',top:12,left:'50%',transform:'translateX(-50%)',width:96,height:28,background:'#000',borderRadius:20,zIndex:20}}),
+React.createElement('div',{style:{position:'absolute',top:0,left:0,right:0,height:54,display:'flex',alignItems:'flex-end',justifyContent:'space-between',padding:'0 26px 8px',fontSize:15,fontWeight:600,color:c,zIndex:10,pointerEvents:'none'}},
+React.createElement('span',null,time),
+React.createElement('div',{style:{display:'flex',alignItems:'center',gap:5}},
+React.createElement('div',{style:{display:'flex',alignItems:'flex-end',gap:2,height:11}},[3,5,8,11].map((h,i)=>React.createElement('div',{key:i,style:{width:3,height:h,background:'currentColor',borderRadius:1}}))),
+React.createElement('svg',{width:15,height:11,viewBox:'0 0 15 11',fill:'none',style:{color:'currentColor'}},React.createElement('path',{d:'M7.5 10.5a1 1 0 100-2 1 1 0 000 2z',fill:'currentColor'}),React.createElement('path',{d:'M2.5 6.5a6 6 0 0110 0',stroke:'currentColor',strokeWidth:1.2,fill:'none',strokeLinecap:'round'}),React.createElement('path',{d:'M0.5 3.5a10 10 0 0114 0',stroke:'currentColor',strokeWidth:1.2,fill:'none',strokeLinecap:'round',opacity:0.6})),
+React.createElement('div',{style:{width:24,height:11,border:'1.5px solid currentColor',borderRadius:3,padding:1,position:'relative'}},React.createElement('div',{style:{width:'65%',height:'100%',background:'currentColor',borderRadius:1}})))),
+React.createElement('div',{style:{position:'absolute',top:54,left:0,right:0,bottom:0,overflow:'hidden'}},children),
+React.createElement('div',{style:{position:'absolute',bottom:8,left:'50%',transform:'translateX(-50%)',width:100,height:5,background:'rgba(0,0,0,0.22)',borderRadius:3,zIndex:10}})));}
+
+function ScreenHome(){return React.createElement('div',{style:{height:'100%',background:'linear-gradient(180deg,#e8f0fe 0%,#fff 35%)',display:'flex',flexDirection:'column'}},
+React.createElement('div',{style:{padding:'14px 20px 10px',display:'flex',justifyContent:'space-between',alignItems:'center'}},
+React.createElement('div',{style:{fontSize:11,color:'#8e8e93'}},'周三 · 4月22日'),
+React.createElement('div',{style:{fontSize:14,fontWeight:700,color:'#1c1c1e'}},'AI小商'),
+React.createElement('div',{style:{width:34,height:34,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:13,fontWeight:700}},'小')),
+React.createElement('div',{style:{margin:'0 16px 12px',borderRadius:20,overflow:'hidden',boxShadow:'0 4px 28px rgba(59,130,246,0.18)'}},
+React.createElement('div',{style:{background:'linear-gradient(135deg,#1e3a8a,#3b82f6)',padding:'18px 20px 16px'}},
+React.createElement('div',{style:{fontSize:11,color:'rgba(255,255,255,0.65)',marginBottom:4}},'今日课程'),
+React.createElement('div',{style:{fontSize:21,fontWeight:700,color:'#fff',marginBottom:3}},'计算机组成原理'),
+React.createElement('div',{style:{fontSize:13,color:'rgba(255,255,255,0.8)',marginBottom:12}},'实训楼402 · 14:00-15:30'),
+React.createElement('div',{style:{display:'flex',gap:7}},['💡 预习CPU结构','📝 实验报告待交'].map((t,i)=>React.createElement('div',{key:i,style:{background:'rgba(255,255,255,0.15)',borderRadius:8,padding:'5px 11px',fontSize:12,color:'#fff'}},t))))),
+React.createElement('div',{style:{display:'grid',gridTemplateColumns:'repeat(4,1fr)',padding:'0 16px',marginBottom:14}},
+[{icon:'📅',l:'课表',c:'#3b82f6'},{icon:'🎙️',l:'录音回顾',c:'#8b5cf6'},{icon:'🤖',l:'AI学姐',c:'#ec4899'},{icon:'📊',l:'选课助手',c:'#10b981'}].map((v,i)=>
+React.createElement('div',{key:i,style:{display:'flex',flexDirection:'column',alignItems:'center',gap:5,padding:'10px 0'}},
+React.createElement('div',{style:{width:46,height:46,borderRadius:13,background:`${v.c}18`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:22}},v.icon),
+React.createElement('div',{style:{fontSize:11,color:'#6b7280'}},v.l)))),
+React.createElement('div',{style:{flex:1,margin:'0 16px',borderRadius:20,background:'#f5f6fa',overflow:'hidden',display:'flex',flexDirection:'column'}},
+React.createElement('div',{style:{padding:'11px 16px',borderBottom:'1px solid #e8e8e8',display:'flex',alignItems:'center',gap:9}},
+React.createElement('div',{style:{width:26,height:26,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:11,fontWeight:700}},'小'),
+React.createElement('div',{style:{fontSize:13,fontWeight:600,color:'#1c1c1e'}},'AI学姐'),
+React.createElement('div',{style:{marginLeft:'auto',width:7,height:7,borderRadius:'50%',background:'#22c55e'}})),
+React.createElement('div',{style:{flex:1,padding:12,overflow:'auto',display:'flex',flexDirection:'column',gap:10}},
+React.createElement('div',{style:{maxWidth:'82%',alignSelf:'flex-end',background:'#3b82f6',color:'#fff',borderRadius:'16px 16px 4px 16px',padding:'9px 13px',fontSize:13,lineHeight:1.55}},'学姐学姐，明天上午的课在哪上？'),
+React.createElement('div',{style:{maxWidth:'86%',alignSelf:'flex-start',background:'#fff',border:'1px solid #e5e7eb',borderRadius:'16px 16px 16px 4px',padding:'10px 13px',fontSize:13,lineHeight:1.6,boxShadow:'0 1px 3px rgba(0,0,0,0.05)',color:'#374151'}},'明天上午9:40你有「计算机组成原理」，在',React.createElement('span',{style:{color:'#3b82f6',fontWeight:600}},'实训楼402'),'～ 另外提醒你下节课要交上周的实验报告哦！📝')),
+React.createElement('div',{style:{padding:'10px 12px',borderTop:'1px solid #eee',display:'flex',alignItems:'center',gap:8}},
+React.createElement('div',{style:{flex:1,background:'#f0f1f5',borderRadius:20,padding:'8px 14px',fontSize:13,color:'#9ca3af'}},'问一下学姐...'),
+React.createElement('div',{style:{width:36,height:36,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16}},[["🎤"]]))),
+React.createElement('div',{style:{height:34}}));}
+
+function ScreenAI(){return React.createElement('div',{style:{height:'100%',background:'#f8f9fc',display:'flex',flexDirection:'column'}},
+React.createElement('div',{style:{background:'#fff',padding:'12px 20px',display:'flex',alignItems:'center',gap:11,borderBottom:'1px solid #f0f0f0'}},
+React.createElement('div',{style:{fontSize:22,color:'#3b82f6',cursor:'pointer'}},'‹'),
+React.createElement('div',{style:{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg,#ec4899,#f472b6)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:12}},'🤖'),
+React.createElement('div',null,React.createElement('div',{style:{fontSize:14,fontWeight:600,color:'#1c1c1e'}},'AI学姐'),React.createElement('div',{style:{fontSize:11,color:'#22c55e'}},'在线 · 即时响应')),
+React.createElement('div',{style:{marginLeft:'auto',width:34,height:34,borderRadius:10,background:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:16,cursor:'pointer'}},'❤️')),
+React.createElement('div',{style:{flex:1,overflow:'auto',padding:14}},
+React.createElement('div',{style:{display:'flex',gap:9,marginBottom:14}},
+React.createElement('div',{style:{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg,#ec4899,#f472b6)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:12,flexShrink:0}},'🤖'),
+React.createElement('div',{style:{maxWidth:'80%',background:'#fff',borderRadius:'16px 16px 16px 4px',padding:'11px 15px',fontSize:13,lineHeight:1.65,boxShadow:'0 1px 4px rgba(0,0,0,0.06)',color:'#374151'}},'嗨！我是AI学姐，有什么校园问题都可以问我哦～📚')),
+React.createElement('div',{style:{display:'flex',justifyContent:'flex-end',marginBottom:12}},React.createElement('div',{style:{maxWidth:'78%',background:'linear-gradient(135deg,#3b82f6,#6366f1)',color:'#fff',borderRadius:'16px 16px 4px 16px',padding:'9px 13px',fontSize:13,lineHeight:1.55}},'学姐，Solidity智能合约的期末考试是什么形式？')),
+React.createElement('div',{style:{display:'flex',gap:9,marginBottom:12}},
+React.createElement('div',{style:{width:30,height:30,borderRadius:'50%',background:'linear-gradient(135deg,#ec4899,#f472b6)',display:'flex',alignItems:'center',justifyContent:'center',color:'#fff',fontSize:12,flexShrink:0}},'🤖'),
+React.createElement('div',{style:{maxWidth:'82%',background:'#fff',borderRadius:'16px 16px 16px 4px',padding:'11px 15px',fontSize:13,lineHeight:1.7,boxShadow:'0 1px 4px rgba(0,0,0,0.06)',color:'#374151'}},
+React.createElement('div',{style:{marginBottom:6}},'根据课程安排，期末考试形式是：'),React.createElement('div',{style:{marginBottom:4}},'📋 ','综合项目开发（占总分60%）','\n独立完成一个基于以太坊的DApp，包含智能合约编写、前端对接、部署测试'),React.createElement('div',{style:{marginTop:8,marginBottom:4}},'📝 ','平时成绩（占40%）','\n课堂参与 + 作业提交'),React.createElement('div',{style:{marginTop:8,color:'#10b981',fontSize:12}},'💡 建议尽早开始准备哦！')))),
+React.createElement('div',{style:{background:'#fff',padding:'11px 14px',paddingBottom:36,borderTop:'1px solid #f0f0f0',display:'flex',gap:9,alignItems:'center'}},
+React.createElement('div',{style:{width:38,height:38,borderRadius:11,background:'#f3f4f6',display:'flex',alignItems:'center',justifyContent:'center',fontSize:18,cursor:'pointer'}},'📷'),
+React.createElement('div',{style:{flex:1,background:'#f3f4f6',borderRadius:20,padding:'9px 15px',fontSize:13,color:'#9ca3af'}},'问一下学姐...'),
+React.createElement('div',{style:{width:38,height:38,borderRadius:'50%',background:'linear-gradient(135deg,#3b82f6,#8b5cf6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:17}},[["🎤"]]));
+}
+
+function ScreenReview(){const items=[{t:'计算机组成原理 · 第七周',s:'课程回顾 · 2026-04-20',d:'1小时32分',tags:['✅ 转写完成','✨ AI已总结'],c:'#3b82f6'},{t:'班会 · 班长会议记录',s:'会议回顾 · 2026-04-18',d:'45分钟',tags:['✅ 转写完成','✨ AI已总结'],c:'#8b5cf6'},{t:'Solidity智能合约 · 第四周',s:'课程回顾 · 2026-04-15',d:'1小时48分',tags:['⏳ 转写中'],c:'#f59e0b'}];
+return React.createElement('div',{style:{height:'100%',background:'#f0f2f5',display:'flex',flexDirection:'column'}},
+React.createElement('div',{style:{background:'#fff',padding:'14px 20px',borderBottom:'1px solid #f0f0f0'}},React.createElement('div',{style:{fontSize:18,fontWeight:700,color:'#1c1c1e'}},'录音回顾'),React.createElement('div',{style:{fontSize:12,color:'#8e8e93',marginTop:2}},'上传录音，AI帮你总结要点')),
+React.createElement('div',{style:{flex:1,overflow:'auto',padding:14}},
+React.createElement('div',{style:{border:'2px dashed #d1d5db',borderRadius:16,padding:'22px',textAlign:'center',marginBottom:14,cursor:'pointer',background:'#fafbfc'}},React.createElement('div',{style:{fontSize:34,marginBottom:6}},'🎙️'),React.createElement('div',{style:{fontSize:14,fontWeight:600,color:'#374151',marginBottom:3}},'上传录音文件'),React.createElement('div',{style:{fontSize:12,color:'#9ca3af'}},'支持 MP3/WAV/M4A · 最大50MB')),
+React.createElement('div',{style:{fontSize:11,fontWeight:600,color:'#9ca3af',letterSpacing:'0.08em',textTransform:'uppercase',marginBottom:9}},'最近回顾'),
+items.map((item,i)=>React.createElement('div',{key:i,style:{background:'#fff',borderRadius:14,padding:14,marginBottom:10,boxShadow:'0 1px 4px rgba(0,0,0,0.05)'}},
+React.createElement('div',{style:{display:'flex',gap:12,alignItems:'flex-start'}},
+React.createElement('div',{style:{width:42,height:42,borderRadius:11,background:`${item.c}18`,display:'flex',alignItems:'center',justifyContent:'center',fontSize:21,flexShrink:0}},'🎧'),
+React.createElement('div',{style:{flex:1,minWidth:0}},
+React.createElement('div',{style:{fontSize:14,fontWeight:600,color:'#1c1c1e',marginBottom:2,whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}},item.t),
+React.createElement('div',{style:{fontSize:12,color:'#8e8e93',marginBottom:7}},item.s),
+React.createElement('div',{style:{display:'flex',gap:5,flexWrap:'wrap'}},
+React.createElement('span',{style:{fontSize:11,background:'#f3f4f6',color:'#6b7280',borderRadius:6,padding:'2px 7px'}},'⏱ '+item.d),
+item.tags.map((tag,j)=>React.createElement('span',{key:j,style:{fontSize:11,background:tag.includes('✅')?'#dcfce7':tag.includes('✨')?'#ede9fe':'#fef3c7',color:tag.includes('✅')?'#16a34a':tag.includes('✨')?'#7c3aed':'#d97706',borderRadius:6,padding:'2px 7px'}},tag)))),
+React.createElement('div',{style:{fontSize:18,color:'#d1d5db',lineHeight:1}},'›'))))));}
+
+function App(){const[activeSection,setActiveSection]=useState('hero');
+useEffect(()=>{const handleScroll=()=>{const sections=['hero','screens','features','tech','api','footer'];for(let i=sections.length-1;i>=0;i--){const el=document.getElementById(sections[i]);if(el&&el.getBoundingClientRect().top<=200){setActiveSection(sections[i]);break}};window.addEventListener('scroll',handleScroll,{passive:true});return()=>window.removeEventListener('scroll',handleScroll)},[]);
+return React.createElement('div',{className:'page'},
+React.createElement('nav',{style:{position:'fixed',top:0,left:0,right:0,zIndex:100,padding:'16px 24px',display:'flex',justifyContent:'space-between',alignItems:'center',background:activeSection==='hero'?'rgba(10,10,15,0)':'rgba(10,10,15,0.85)',backdropFilter:'blur(12px)',borderBottom:activeSection==='hero'?'none':'1px solid rgba(255,255,255,0.06)',transition:'all .3s'}},
+React.createElement('div',{style:{fontSize:16,fontWeight:700,letterSpacing:'-0.01em'}},React.createElement('span',{style:{color:'#fff'}},'AI'),React.createElement('span',{style:{background:'linear-gradient(135deg,#60a5fa,#a78bfa)','-webkit-background-clip':'text','-webkit-text-fill-color':'transparent','background-clip':'text'}},'小商')),
+['功能介绍','核心截图','技术架构'].map(s=>React.createElement('a',{key:s,href:`#${s}`,style:{fontSize:13,color: activeSection===s?'#60a5fa':'rgba(255,255,255,0.5)',textDecoration:'none',transition:'color .2s',padding:'4px 8px'}},s))),
+React.createElement('section',{id:'hero',className:'hero'},
+React.createElement('div',{className:'hero-badge'},React.createElement('div',{className:'badge-dot'}),'2026讯飞杯人工智能命题赛'),
+React.createElement('h1',null,'AI小商',React.createElement('br',null),React.createElement('em',null,'智慧校园AI伙伴')),
+React.createElement('p',{className:'hero-desc'},'基于讯飞开放平台打造的校园AI助手，自然语言对话 + 语音交互 + 多模态识别，一站式解决师生的校园生活、学习、办公需求'),
+React.createElement('div',null,React.createElement('a',{className:'hero-cta',href:'#screens'},'🚀 抢先体验Demo')),
+React.createElement('div',{className:'hero-stats'},
+[{n:'6',u:'核心功能'},{n:'5',u:'讯飞API集成'},{n:'2-3人',u:'团队规模'},{n:'7天',u:'开发周期'}].map((s,i)=>React.createElement('div',{key:i,className:'hero-stat'},React.createElement('strong',null,s.n),React.createElement('span',null,s.u))))),
+React.createElement('div',{className:'divider'}),
+React.createElement('section',{id:'screens',className:'section'},
+React.createElement('p',{className:'section-label'},'Core Features'),
+React.createElement('h2',{className:'section-title'},'4大核心功能模块'),
+React.createElement('p',{className:'section-desc'},'从课表管理到AI对话，覆盖校园场景的全链路需求'),
+React.createElement('div',{className:'screens-grid'},
+React.createElement('div',{className:'phone-wrap'},
+React.createElement(IosFrame,{w:375,h:700},
+React.createElement(ScreenHome)),
+React.createElement('div',{className:'phone-label'},React.createElement('strong',null,'首页 Dashboard'),'今日课程 + 快捷入口 + AI对话预览')),
+React.createElement('div',{className:'phone-wrap'},
+React.createElement(IosFrame,{w:375,h:700},
+React.createElement(ScreenAI)),
+React.createElement('div',{className:'phone-label'},React.createElement('strong',null,'AI学姐对话'),'语音交互 + 知识库问答 + 情感陪伴')),
+React.createElement('div',{className:'phone-wrap'},
+React.createElement(IosFrame,{w:375,h:700},
+React.createElement(ScreenReview)),
+React.createElement('div',{className:'phone-label'},React.createElement('strong',null,'录音回顾'),'上传录音 → ASR转写 → AI总结 → 导出'))),
+React.createElement('div',{className:'divider'}),
+React.createElement('section',{id:'features',className:'section'},
+React.createElement('p',{className:'section-label'},'Modules'),
+React.createElement('h2',{className:'section-title'},'完整功能矩阵'),
+React.createElement('p',{className:'section-desc'},'6大功能模块，全方位覆盖校园场景'),
+React.createElement('div',{className:'features-grid'},
+[{icon:'📅',t:'智能课表管家',d:'图片OCR导入 + 自然语言添加日程 + 首页提醒。讯飞OCR识别课表图片，星火大模型解析为结构化数据。',color:'#3b82f6'},{icon:'🎙️',t:'课程·会议回顾',d:'MP3上传 → 讯飞ASR转写 → 星火大模型生成结构化总结 → 导出DOCX/PPT。',color:'#8b5cf6'},{icon:'🤖',t:'AI学姐对话',d:'RAG知识库检索 + 星火大模型生成回答。支持语音输入/播报，情感陪伴模式。',color:'#ec4899'},{icon:'📊',t:'智能选课助手',d:'根据专业方向、兴趣偏好、学分需求，AI推荐选修课程并解释理由。',color:'#10b981'},{icon:'🎨',t:'校园活动助手',d:'AI生成活动策划、宣传文案。输入活动主题和基本信息，快速生成完整方案。',color:'#f59e0b'},{icon:'📚',t:'管理端数据看板',d:'知识库管理、用户管理、内容审核、数据统计。运营人员轻松维护。',color:'#6366f1'}].map((f,i)=>
+React.createElement('div',{key:i,className:'feature-card'},
+React.createElement('div',{className:'feature-icon',style:{background:`${f.color}18`}},f.icon),
+React.createElement('h3',null,f.t),
+React.createElement('p',null,f.d))))),
+React.createElement('div',{className:'divider'}),
+React.createElement('section',{id:'tech',className:'section'},
+React.createElement('p',{className:'section-label'},'Technology'),
+React.createElement('h2',{className:'section-title'},'讯飞API全能力集成'),
+React.createElement('p',{className:'section-desc'},'充分运用讯飞开放平台的AI能力，打造差异化竞争优势'),
+React.createElement('div',{className:'tech-badges'},
+[{n:'🔥 星火大模型',d:'#f59e0b',c:'星火认知'},{n:'🎤 ASR语音转写',d:'#3b82f6',c:'语音识别'},{n:'📷 OCR文字识别',d:'#10b981',c:'图像处理'},{n:'🔊 语音合成',d:'#8b5cf6',c:'语音合成'},{n:'📋 文档解析',d:'#ec4899',c:'文档处理'},{n:'☁️ 讯飞云',d:'#6366f1',c:'云服务'}].map((t,i)=>React.createElement('div',{key:i,className:'tech-badge'},
+React.createElement('div',{style:{width:10,height:10,borderRadius:'50%',background:t.d}}),React.createElement('span',null,t.n))))),
+React.createElement('div',{className:'divider'}),
+React.createElement('section',{id:'api',className:'section'},
+React.createElement('p',{className:'section-label'},'Architecture'),
+React.createElement('h2',{className:'section-title'},'技术架构与API流程'),
+React.createElement('p',{className:'section-desc'},'前后端分离 + RAG知识库 + 讯飞全能力API'),
+React.createElement('div',{className:'api-flow'},
+[{n:1,t:'用户请求',d:'用户通过语音或文本发起请求，如"帮我看看明天有什么课"',icon:'👤'},{n:2,t:'星火理解',d:'讯飞星火大模型理解用户意图，转换为结构化指令',icon:'🧠'},{n:3,t:'意图分类',d:'判断是课表查询、录音处理还是知识问答，路由到不同能力',icon:'🔀'},{n:4,t:'能力调用',d:'调用对应讯飞API：ASR转写 / OCR识别 / 文档解析 / 知识检索',icon:'⚡'},{n:5,t:'知识库检索',d:'RAG系统从向量数据库检索相关文档，提升回答准确性',icon:'📚'},{n:6,t:'生成响应',d:'星火大模型整合API结果 + 知识库内容，生成自然语言回答',icon:'✨'},{n:7,t:'多模态输出',d:'文字回复 / 语音播报 / 结构化数据展示',icon:'🎯'}].map((step,i)=>
+React.createElement('div',{key:i,className:'api-step'},
+React.createElement('div',{className:'api-num'},step.n),
+React.createElement('div',{className:'api-content'},
+React.createElement('h4',null,step.icon,' ',step.t),
+React.createElement('p',null,step.d)))))),
+React.createElement('div',{className:'divider'}),
+React.createElement('footer',{className:'footer'},
+React.createElement('p',null,'AI小商 · 2026讯飞杯人工智能命题赛 · 智慧校园AI伙伴'),
+React.createElement('p',{style:{marginTop:8}},'')))

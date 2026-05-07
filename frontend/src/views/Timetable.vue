@@ -58,7 +58,10 @@
           <span class="course-slot">第{{ course.start_slot }}-{{ course.end_slot }}节</span>
         </div>
         <div class="course-info-col">
-          <h3>{{ course.name }}</h3>
+          <div class="course-header">
+            <h3>{{ course.name }}</h3>
+            <span v-if="course.source === '选课助手'" class="course-badge selected">选课</span>
+          </div>
           <div class="course-meta">
             <span class="meta-item">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -556,6 +559,22 @@ function getImportanceLabel(level) {
   font-weight: 600;
   color: #1E293B;
   margin-bottom: 8px;
+}
+
+.course-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 4px;
+}
+
+.course-badge.selected {
+  padding: 2px 8px;
+  background: linear-gradient(135deg, #0891B2, #22D3EE);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 600;
+  border-radius: 10px;
 }
 
 .course-meta {

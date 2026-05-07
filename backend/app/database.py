@@ -42,3 +42,12 @@ async def init_db():
 async def close_db():
     """关闭数据库连接"""
     await engine.dispose()
+
+
+async def get_db_context():
+    """获取数据库会话的上下文管理器"""
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+        finally:
+            await session.close()

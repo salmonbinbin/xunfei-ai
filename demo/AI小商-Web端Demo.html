@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI小商 - Web端原型Demo</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0891B2;
+      --primary-light: #22D3EE;
+      --primary-dark: #0E7490;
+      --mint: #059669;
+      --sky: #0284C7;
+      --purple: #8B5CF6;
+      --danger: #EF4444;
+      --orange: #F97316;
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --border: #E2E8F0;
+      --text-primary: #1E293B;
+      --text-body: #475569;
+      --text-secondary: #94A3B8;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', 'Inter', -apple-system, sans-serif;
+      background: var(--bg-page);
+      min-height: 100vh;
+    }
+
+    /* Layout */
+    .app-container {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: clamp(200px, 18vw, 240px);
+      background: #fff;
+      border-right: 1px solid var(--border);
+      display: flex;
+      flex-direction: column;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      z-index: 100;
+    }
+
+    .sidebar-logo {
+      padding: clamp(16px, 2vw, 24px);
+      display: flex;
+      align-items: center;
+      gap: clamp(8px, 1vw, 12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .logo-icon {
+      width: clamp(32px, 3.5vw, 40px);
+      height: clamp(32px, 3.5vw, 40px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .logo-text {
+      font-size: clamp(16px, 1.8vw, 20px);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .sidebar-nav {
+      flex: 1;
+      padding: clamp(12px, 1.2vw, 16px) clamp(8px, 1vw, 12px);
+    }
+
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: clamp(8px, 1vw, 12px);
+      padding: clamp(10px, 1.2vw, 12px) clamp(12px, 1.5vw, 16px);
+      border-radius: 10px;
+      color: var(--text-body);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 4px;
+    }
+
+    .nav-item:hover {
+      background: var(--bg-page);
+    }
+
+    .nav-item.active {
+      background: rgba(8,145,178,0.1);
+      color: var(--primary);
+    }
+
+    .nav-item-icon {
+      width: clamp(18px, 1.8vw, 20px);
+      height: clamp(18px, 1.8vw, 20px);
+    }
+
+    .sidebar-footer {
+      padding: clamp(12px, 1.2vw, 16px);
+      border-top: 1px solid var(--border);
+    }
+
+    .user-info {
+      display: flex;
+      align-items: center;
+      gap: clamp(8px, 1vw, 12px);
+    }
+
+    .user-avatar {
+      width: clamp(32px, 3.5vw, 40px);
+      height: clamp(32px, 3.5vw, 40px);
+      background: linear-gradient(135deg, var(--purple), var(--primary-light));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 600;
+    }
+
+    .user-name {
+      font-size: clamp(13px, 1.2vw, 14px);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .user-role {
+      font-size: clamp(11px, 1vw, 12px);
+      color: var(--text-secondary);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: clamp(200px, 18vw, 240px);
+    }
+
+    /* Header */
+    .header {
+      background: #fff;
+      border-bottom: 1px solid var(--border);
+      padding: clamp(12px, 1.5vw, 16px) clamp(20px, 3vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      position: sticky;
+      top: 0;
+      z-index: 50;
+    }
+
+    .header-title {
+      font-size: clamp(18px, 2.2vw, 24px);
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .header-actions {
+      display: flex;
+      gap: clamp(8px, 1vw, 12px);
+    }
+
+    .header-btn {
+      padding: clamp(8px, 1vw, 10px) clamp(14px, 1.8vw, 20px);
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: clamp(6px, 0.8vw, 8px);
+      color: var(--text-body);
+      transition: all 0.2s ease;
+      font-size: clamp(13px, 1.2vw, 14px);
+    }
+
+    .header-btn:hover {
+      border-color: var(--primary);
+      color: var(--primary);
+    }
+
+    .header-btn.primary {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none;
+      color: #fff;
+    }
+
+    .header-btn.primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(8,145,178,0.25);
+    }
+
+    /* Content Area */
+    .content-area {
+      padding: clamp(20px, 3vw, 32px);
+    }
+
+    /* Dashboard Grid */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(16px, 2vw, 24px);
+      margin-bottom: clamp(20px, 3vw, 32px);
+    }
+
+    .stat-card {
+      background: #fff;
+      border-radius: clamp(12px, 1.5vw, 16px);
+      padding: clamp(16px, 2vw, 24px);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .stat-card-icon {
+      width: clamp(40px, 4.5vw, 48px);
+      height: clamp(40px, 4.5vw, 48px);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: clamp(12px, 1.5vw, 16px);
+    }
+
+    .stat-value {
+      font-size: clamp(24px, 3vw, 32px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: clamp(12px, 1.3vw, 14px);
+      color: var(--text-secondary);
+    }
+
+    .stat-trend {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      font-size: 12px;
+      margin-top: 8px;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    .stat-trend.up {
+      background: rgba(5,150,105,0.1);
+      color: var(--mint);
+    }
+
+    .stat-trend.down {
+      background: rgba(239,68,68,0.1);
+      color: var(--danger);
+    }
+
+    /* Cards */
+    .card {
+      background: #fff;
+      border-radius: clamp(12px, 1.5vw, 16px);
+      padding: clamp(16px, 2vw, 24px);
+      box-shadow: 0 2px 12px rgba(0,0,0,0.04);
+    }
+
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: clamp(14px, 1.8vw, 20px);
+    }
+
+    .card-title {
+      font-size: clamp(15px, 1.6vw, 18px);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    /* Schedule List */
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 1.2vw, 12px);
+    }
+
+    .schedule-item {
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 1.5vw, 16px);
+      padding: clamp(12px, 1.5vw, 16px);
+      background: var(--bg-page);
+      border-radius: 12px;
+      transition: all 0.2s ease;
+      cursor: pointer;
+    }
+
+    .schedule-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    }
+
+    .schedule-time {
+      width: clamp(50px, 5.5vw, 60px);
+      text-align: center;
+      padding: clamp(10px, 1.2vw, 12px) 0;
+      background: rgba(8,145,178,0.1);
+      border-radius: 10px;
+    }
+
+    .schedule-time-start {
+      font-size: clamp(14px, 1.5vw, 16px);
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .schedule-time-end {
+      font-size: clamp(11px, 1.1vw, 12px);
+      color: var(--text-secondary);
+    }
+
+    .schedule-info {
+      flex: 1;
+    }
+
+    .schedule-name {
+      font-size: clamp(14px, 1.5vw, 16px);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .schedule-meta {
+      font-size: clamp(12px, 1.2vw, 13px);
+      color: var(--text-secondary);
+    }
+
+    .schedule-location {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--mint);
+    }
+
+    /* Quick Actions */
+    .quick-actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: clamp(12px, 1.5vw, 16px);
+    }
+
+    .quick-action {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: clamp(10px, 1.2vw, 12px);
+      padding: clamp(16px, 2vw, 24px) clamp(12px, 1.5vw, 16px);
+      background: var(--bg-page);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      border: 2px solid transparent;
+    }
+
+    .quick-action:hover {
+      border-color: var(--primary);
+      transform: translateY(-4px);
+    }
+
+    .quick-action-icon {
+      width: clamp(44px, 5vw, 56px);
+      height: clamp(44px, 5vw, 56px);
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-action-label {
+      font-size: clamp(12px, 1.3vw, 14px);
+      font-weight: 500;
+      color: var(--text-body);
+    }
+
+    /* AI Chat Panel */
+    .chat-panel {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - clamp(140px, 18vw, 180px));
+    }
+
+    .chat-header {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 1.2vw, 12px);
+      padding: clamp(12px, 1.5vw, 16px) 0;
+      border-bottom: 1px solid var(--border);
+      margin-bottom: clamp(12px, 1.5vw, 16px);
+    }
+
+    .chat-avatar {
+      width: clamp(36px, 4vw, 44px);
+      height: clamp(36px, 4vw, 44px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+    }
+
+    .chat-info h3 {
+      font-size: clamp(14px, 1.5vw, 16px);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .chat-info p {
+      font-size: clamp(11px, 1.1vw, 12px);
+      color: var(--mint);
+    }
+
+    .emotion-btn {
+      margin-left: auto;
+      width: clamp(32px, 3.5vw, 40px);
+      height: clamp(32px, 3.5vw, 40px);
+      background: rgba(239,68,68,0.1);
+      border: none;
+      border-radius: 50%;
+      color: var(--danger);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .emotion-btn.active {
+      background: var(--danger);
+      color: #fff;
+    }
+
+    .chat-messages {
+      flex: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(12px, 1.5vw, 16px);
+      padding-right: 8px;
+    }
+
+    .chat-message {
+      display: flex;
+      gap: clamp(10px, 1.2vw, 12px);
+      max-width: 80%;
+    }
+
+    .chat-message.user {
+      flex-direction: row-reverse;
+      align-self: flex-end;
+    }
+
+    .chat-message-avatar {
+      width: clamp(30px, 3.5vw, 36px);
+      height: clamp(30px, 3.5vw, 36px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .chat-message.user .chat-message-avatar {
+      background: linear-gradient(135deg, #6366F1, #8B5CF6);
+      color: #fff;
+    }
+
+    .chat-message.ai .chat-message-avatar {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+    }
+
+    .chat-message-bubble {
+      padding: clamp(12px, 1.4vw, 14px) clamp(14px, 1.7vw, 18px);
+      border-radius: 18px;
+      font-size: clamp(13px, 1.4vw, 15px);
+      line-height: 1.6;
+    }
+
+    .chat-message.user .chat-message-bubble {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+    }
+
+    .chat-message.ai .chat-message-bubble {
+      background: var(--bg-page);
+      color: var(--text-primary);
+    }
+
+    .chat-input-area {
+      display: flex;
+      gap: clamp(10px, 1.2vw, 12px);
+      padding: clamp(12px, 1.5vw, 16px) 0;
+      border-top: 1px solid var(--border);
+      margin-top: clamp(12px, 1.5vw, 16px);
+    }
+
+    .chat-input {
+      flex: 1;
+      padding: clamp(10px, 1.4vw, 14px) clamp(14px, 1.8vw, 20px);
+      background: var(--bg-page);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      font-size: clamp(13px, 1.4vw, 15px);
+      font-family: inherit;
+      outline: none;
+      transition: all 0.2s ease;
+    }
+
+    .chat-input:focus {
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(8,145,178,0.1);
+    }
+
+    .chat-btn {
+      width: clamp(40px, 4.5vw, 48px);
+      height: clamp(40px, 4.5vw, 48px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .chat-btn:hover {
+      transform: scale(1.05);
+    }
+
+    /* Review List */
+    .review-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: clamp(16px, 1.8vw, 20px);
+    }
+
+    .review-card {
+      background: var(--bg-page);
+      border-radius: clamp(12px, 1.5vw, 16px);
+      padding: clamp(16px, 1.8vw, 20px);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .review-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+    }
+
+    .review-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: clamp(10px, 1.2vw, 12px);
+    }
+
+    .review-title {
+      font-size: clamp(14px, 1.5vw, 16px);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .review-time {
+      font-size: clamp(11px, 1.1vw, 12px);
+      color: var(--text-secondary);
+    }
+
+    .review-summary {
+      font-size: clamp(12px, 1.3vw, 14px);
+      color: var(--text-body);
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      margin-bottom: 12px;
+    }
+
+    .review-tags {
+      display: flex;
+      gap: 8px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: clamp(3px, 0.5vw, 4px) clamp(10px, 1.2vw, 12px);
+      background: rgba(8,145,178,0.08);
+      border-radius: 20px;
+      font-size: clamp(11px, 1.1vw, 12px);
+      color: var(--primary);
+    }
+
+    .badge.mint {
+      background: rgba(5,150,105,0.08);
+      color: var(--mint);
+    }
+
+    .badge.purple {
+      background: rgba(139,92,246,0.08);
+      color: var(--purple);
+    }
+
+    /* Upload Area */
+    .upload-area {
+      border: 2px dashed var(--border);
+      border-radius: clamp(12px, 1.5vw, 16px);
+      padding: clamp(32px, 4.5vw, 48px);
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: clamp(16px, 2.2vw, 24px);
+    }
+
+    .upload-area:hover {
+      border-color: var(--primary);
+      background: rgba(8,145,178,0.02);
+    }
+
+    .upload-icon {
+      width: clamp(48px, 6vw, 64px);
+      height: clamp(48px, 6vw, 64px);
+      background: rgba(8,145,178,0.1);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto clamp(12px, 1.5vw, 16px);
+      color: var(--primary);
+    }
+
+    .upload-title {
+      font-size: clamp(14px, 1.5vw, 16px);
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: clamp(6px, 0.8vw, 8px);
+    }
+
+    .upload-desc {
+      font-size: clamp(12px, 1.3vw, 14px);
+      color: var(--text-secondary);
+    }
+
+    /* Progress */
+    .progress-area {
+      background: var(--bg-page);
+      border-radius: clamp(12px, 1.5vw, 16px);
+      padding: clamp(16px, 2vw, 24px);
+      margin-bottom: clamp(16px, 2.2vw, 24px);
+    }
+
+    .progress-item {
+      margin-bottom: clamp(12px, 1.5vw, 16px);
+    }
+
+    .progress-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .progress-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+    }
+
+    .progress-label {
+      font-size: 14px;
+      color: var(--text-body);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .progress-value {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .progress-bar {
+      height: 8px;
+      background: #fff;
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      border-radius: 4px;
+      transition: width 0.3s ease;
+    }
+
+    /* Two Column Layout */
+    .two-col {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: clamp(16px, 2.2vw, 24px);
+    }
+
+    /* Animation */
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeIn 0.5s ease forwards;
+    }
+
+    /* Responsive */
+    @media (max-width: 1200px) {
+      .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar {
+        width: 200px;
+      }
+      .main-content {
+        margin-left: 200px;
+      }
+      .header-title {
+        font-size: 18px;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .sidebar {
+        transform: translateX(-100%);
+        transition: transform 0.3s ease;
+      }
+      .sidebar.open {
+        transform: translateX(0);
+      }
+      .main-content {
+        margin-left: 0;
+      }
+      .dashboard-grid {
+        grid-template-columns: 1fr;
+      }
+      .two-col {
+        grid-template-columns: 1fr;
+      }
+      .header {
+        padding: 12px 16px;
+      }
+      .content-area {
+        padding: 16px;
+      }
+      .header-actions {
+        gap: 8px;
+      }
+      .header-btn {
+        padding: 8px 12px;
+        font-size: 13px;
+      }
+      .header-btn span {
+        display: none;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .stat-value {
+        font-size: 24px;
+      }
+      .quick-actions {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel">
+    // Icons
+    const Icons = {
+      home: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/>
+          <polyline points="9,22 9,12 15,12 15,22"/>
+        </svg>
+      ),
+      calendar: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="4" width="18" height="18" rx="2"/>
+          <line x1="16" y1="2" x2="16" y2="6"/>
+          <line x1="8" y1="2" x2="8" y2="6"/>
+          <line x1="3" y1="10" x2="21" y2="10"/>
+        </svg>
+      ),
+      chat: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+      ),
+      user: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/>
+          <circle cx="12" cy="7" r="4"/>
+        </svg>
+      ),
+      upload: () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="17,8 12,3 7,8"/>
+          <line x1="12" y1="3" x2="12" y2="15"/>
+        </svg>
+      ),
+      mic: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+          <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+        </svg>
+      ),
+      send: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <line x1="22" y1="2" x2="11" y2="13"/>
+          <polygon points="22,2 15,22 11,13 2,9"/>
+        </svg>
+      ),
+      heart: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+        </svg>
+      ),
+      mapPin: () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+          <circle cx="12" cy="10" r="3"/>
+        </svg>
+      ),
+      book: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+          <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+        </svg>
+      ),
+      star: () => (
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+        </svg>
+      ),
+      clock: () => (
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="10"/>
+          <polyline points="12,6 12,12 16,14"/>
+        </svg>
+      ),
+      activity: () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <polyline points="22,12 18,12 15,21 9,3 6,12 2,12"/>
+        </svg>
+      ),
+      image: () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <rect x="3" y="3" width="18" height="18" rx="2"/>
+          <circle cx="8.5" cy="8.5" r="1.5"/>
+          <polyline points="21,15 16,10 5,21"/>
+        </svg>
+      ),
+      download: () => (
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+          <polyline points="7,10 12,15 17,10"/>
+          <line x1="12" y1="15" x2="12" y2="3"/>
+        </svg>
+      ),
+      users: () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+          <circle cx="9" cy="7" r="4"/>
+          <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+        </svg>
+      ),
+      messageSquare: () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+        </svg>
+      ),
+      settings: () => (
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 010 2.83 2 2 0 01-2.83 0l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-2 2 2 2 0 01-2-2v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 01-2.83 0 2 2 0 010-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 01-2-2 2 2 0 012-2h.09A1.65 1.65 0 004.6 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 010-2.83 2 2 0 012.83 0l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 012-2 2 2 0 012 2v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 012.83 0 2 2 0 010 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 012 2 2 2 0 01-2 2h-.09a1.65 1.65 0 00-1.51 1z"/>
+        </svg>
+      ),
+    };
+
+    // App Component
+    function App() {
+      const [activeNav, setActiveNav] = React.useState(0);
+      const [emotionMode, setEmotionMode] = React.useState(false);
+      const [messages, setMessages] = React.useState([
+        { type: 'ai', text: '你好！我是AI学姐，有什么可以帮你的吗？无论是选课困惑、学习问题还是生活琐事，都可以和我聊聊～' },
+      ]);
+      const [inputText, setInputText] = React.useState('');
+      const [progress, setProgress] = React.useState(0);
+
+      const handleSend = () => {
+        if (!inputText.trim()) return;
+        setMessages([...messages, { type: 'user', text: inputText }]);
+        setInputText('');
+        setTimeout(() => {
+          setMessages(prev => [...prev, {
+            type: 'ai',
+            text: '这个问题很棒！根据你的专业（经济管理学院）和当前年级，我建议你优先考虑选修一些数据分析相关的课程，这对未来的就业会很有帮助哦～'
+          }]);
+        }, 1500);
+      };
+
+      const schedules = [
+        { name: '高等数学', time: '08:00-09:40', location: '教学楼A301', color: '#0891B2' },
+        { name: '大学英语', time: '10:00-11:40', location: '教学楼B205', color: '#059669' },
+        { name: '计算机网络', time: '14:00-15:40', location: '实验楼302', color: '#8B5CF6' },
+      ];
+
+      const reviews = [
+        { title: '市场经济学期中讲座', time: '2026-04-20 14:30', summary: '本次讲座主要围绕市场竞争机制展开，讲述了完全竞争市场的四个条件...' },
+        { title: '学生会周例会', time: '2026-04-18 18:00', summary: '会议讨论了五四大合唱的筹备工作、分工安排...' },
+      ];
+
+      const stats = [
+        { icon: 'users', label: '用户总数', value: '2,847', trend: '+12%', up: true, color: '#0891B2' },
+        { icon: 'messageSquare', label: 'AI对话数', value: '18.6K', trend: '+8%', up: true, color: '#059669' },
+        { icon: 'activity', label: 'API调用', value: '52.3K', trend: '+23%', up: true, color: '#8B5CF6' },
+        { icon: 'book', label: '录音转写', value: '386', trend: '-3%', up: false, color: '#F97316' },
+      ];
+
+      const handleUpload = () => {
+        setProgress(0);
+        const interval = setInterval(() => {
+          setProgress(prev => {
+            if (prev >= 100) {
+              clearInterval(interval);
+              return 100;
+            }
+            return prev + Math.random() * 15;
+          });
+        }, 300);
+      };
+
+      const renderContent = () => {
+        switch (activeNav) {
+          case 0: // Home
+            return (
+              <div className="animate-in">
+                <div className="dashboard-grid">
+                  {stats.map((stat, i) => (
+                    <div key={i} className="stat-card">
+                      <div className="stat-card-icon" style={{ background: `${stat.color}15`, color: stat.color }}>
+                        {stat.icon === 'users' && <Icons.users />}
+                        {stat.icon === 'messageSquare' && <Icons.messageSquare />}
+                        {stat.icon === 'activity' && <Icons.activity />}
+                        {stat.icon === 'book' && <Icons.book />}
+                      </div>
+                      <div className="stat-value">{stat.value}</div>
+                      <div className="stat-label">{stat.label}</div>
+                      <div className={`stat-trend ${stat.up ? 'up' : 'down'}`}>
+                        {stat.up ? '↑' : '↓'} {stat.trend}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="two-col">
+                  <div className="card">
+                    <div className="card-header">
+                      <h3 className="card-title">今日课程</h3>
+                      <span className="badge">周三</span>
+                    </div>
+                    <div className="schedule-list">
+                      {schedules.map((s, i) => (
+                        <div key={i} className="schedule-item">
+                          <div className="schedule-time">
+                            <div className="schedule-time-start">{s.time.split('-')[0]}</div>
+                            <div className="schedule-time-end">{s.time.split('-')[1]}</div>
+                          </div>
+                          <div className="schedule-info">
+                            <div className="schedule-name">{s.name}</div>
+                            <div className="schedule-meta">第{i + 1}节</div>
+                          </div>
+                          <div className="schedule-location">
+                            <Icons.mapPin /> {s.location}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="card">
+                    <div className="card-header">
+                      <h3 className="card-title">快捷功能</h3>
+                    </div>
+                    <div className="quick-actions">
+                      <div className="quick-action">
+                        <div className="quick-action-icon" style={{ background: 'rgba(8,145,178,0.1)', color: '#0891B2' }}>
+                          <Icons.upload />
+                        </div>
+                        <span className="quick-action-label">课表导入</span>
+                      </div>
+                      <div className="quick-action" onClick={() => setActiveNav(2)}>
+                        <div className="quick-action-icon" style={{ background: 'rgba(5,150,105,0.1)', color: '#059669' }}>
+                          <Icons.chat />
+                        </div>
+                        <span className="quick-action-label">AI学姐</span>
+                      </div>
+                      <div className="quick-action" onClick={() => setActiveNav(3)}>
+                        <div className="quick-action-icon" style={{ background: 'rgba(139,92,246,0.1)', color: '#8B5CF6' }}>
+                          <Icons.book />
+                        </div>
+                        <span className="quick-action-label">录音回顾</span>
+                      </div>
+                      <div className="quick-action">
+                        <div className="quick-action-icon" style={{ background: 'rgba(249,115,22,0.1)', color: '#F97316' }}>
+                          <Icons.star />
+                        </div>
+                        <span className="quick-action-label">选课助手</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+
+          case 1: // Timetable
+            return (
+              <div className="animate-in">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="card-title">导入新课表</h3>
+                  </div>
+                  {!progress ? (
+                    <div className="upload-area" onClick={handleUpload}>
+                      <div className="upload-icon">
+                        <Icons.image />
+                      </div>
+                      <div className="upload-title">点击上传课表图片</div>
+                      <div className="upload-desc">支持 JPG、PNG 格式</div>
+                    </div>
+                  ) : (
+                    <div className="progress-area">
+                      <div className="progress-item">
+                        <div className="progress-header">
+                          <span className="progress-label"><Icons.upload /> 上传进度</span>
+                          <span className="progress-value">{Math.min(Math.round(progress), 100)}%</span>
+                        </div>
+                        <div className="progress-bar">
+                          <div className="progress-fill" style={{ width: `${Math.min(progress, 100)}%` }} />
+                        </div>
+                      </div>
+                      {progress > 30 && (
+                        <div className="progress-item">
+                          <div className="progress-header">
+                            <span className="progress-label"><Icons.activity /> OCR识别</span>
+                            <span className="progress-value">{progress > 60 ? '完成' : '处理中...'}</span>
+                          </div>
+                          <div className="progress-bar">
+                            <div className="progress-fill" style={{ width: `${Math.min(Math.max(0, (progress - 30) * 1.5), 100)}%` }} />
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+
+                <div className="card" style={{ marginTop: 24 }}>
+                  <div className="card-header">
+                    <h3 className="card-title">本周课表</h3>
+                  </div>
+                  <div className="schedule-list">
+                    {schedules.map((s, i) => (
+                      <div key={i} className="schedule-item">
+                        <div className="schedule-time">
+                          <div className="schedule-time-start">{s.time.split('-')[0]}</div>
+                          <div className="schedule-time-end">{s.time.split('-')[1]}</div>
+                        </div>
+                        <div className="schedule-info">
+                          <div className="schedule-name">{s.name}</div>
+                          <div className="schedule-meta">周三 · 第{i + 1}节</div>
+                        </div>
+                        <div className="schedule-location">
+                          <Icons.mapPin /> {s.location}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+
+          case 2: // AI Chat
+            return (
+              <div className="card animate-in">
+                <div className="chat-panel">
+                  <div className="chat-header">
+                    <div className="chat-avatar">
+                      <Icons.chat />
+                    </div>
+                    <div className="chat-info">
+                      <h3>AI学姐</h3>
+                      <p>在线 · 为你服务</p>
+                    </div>
+                    <button
+                      className={`emotion-btn ${emotionMode ? 'active' : ''}`}
+                      onClick={() => setEmotionMode(!emotionMode)}
+                    >
+                      <Icons.heart />
+                    </button>
+                  </div>
+
+                  <div className="chat-messages">
+                    {messages.map((msg, i) => (
+                      <div key={i} className={`chat-message ${msg.type}`}>
+                        <div className="chat-message-avatar">
+                          {msg.type === 'ai' ? <Icons.chat /> : '我'}
+                        </div>
+                        <div className="chat-message-bubble">{msg.text}</div>
+                      </div>
+                    ))}
+                  </div>
+
+                  <div className="chat-input-area">
+                    <input
+                      type="text"
+                      className="chat-input"
+                      placeholder="输入消息..."
+                      value={inputText}
+                      onChange={(e) => setInputText(e.target.value)}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSend()}
+                    />
+                    <button className="chat-btn" style={{ background: 'rgba(8,145,178,0.1)', color: 'var(--primary)' }}>
+                      <Icons.mic />
+                    </button>
+                    <button className="chat-btn" onClick={handleSend}>
+                      <Icons.send />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            );
+
+          case 3: // Review
+            return (
+              <div className="animate-in">
+                <div className="card" style={{ marginBottom: 24 }}>
+                  <div className="card-header">
+                    <h3 className="card-title">上传录音</h3>
+                  </div>
+                  <div className="upload-area" onClick={handleUpload}>
+                    <div className="upload-icon">
+                      <Icons.upload />
+                    </div>
+                    <div className="upload-title">点击上传录音文件</div>
+                    <div className="upload-desc">支持 MP3、WAV 格式，最大 50MB</div>
+                  </div>
+                </div>
+
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="card-title">历史回顾</h3>
+                  </div>
+                  <div className="review-grid">
+                    {reviews.map((r, i) => (
+                      <div key={i} className="review-card">
+                        <div className="review-card-header">
+                          <div>
+                            <div className="review-title">{r.title}</div>
+                            <div className="review-time">{r.time}</div>
+                          </div>
+                          <span className="badge">{i === 0 ? '课程' : '会议'}</span>
+                        </div>
+                        <p className="review-summary">{r.summary}</p>
+                        <div className="review-tags">
+                          <span className="badge mint"><Icons.download /> DOCX</span>
+                          <span className="badge purple"><Icons.download /> PPTX</span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            );
+
+          case 4: // Profile
+            return (
+              <div className="animate-in">
+                <div className="card">
+                  <div className="card-header">
+                    <h3 className="card-title">个人信息</h3>
+                  </div>
+                  <div style={{ display: 'flex', gap: 24, alignItems: 'center' }}>
+                    <div style={{ width: 80, height: 80, background: 'linear-gradient(135deg, var(--purple), var(--primary-light))', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff', fontSize: 32, fontWeight: 700 }}>
+                      李
+                    </div>
+                    <div>
+                      <h4 style={{ fontSize: 20, fontWeight: 600, color: 'var(--text-primary)', marginBottom: 8 }}>李同学</h4>
+                      <p style={{ color: 'var(--text-secondary)', marginBottom: 4 }}>经济管理学院 · 大二</p>
+                      <p style={{ color: 'var(--text-secondary)' }}>ID: 2024001234</p>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="card" style={{ marginTop: 24 }}>
+                  <div className="card-header">
+                    <h3 className="card-title">学习统计</h3>
+                  </div>
+                  <div className="dashboard-grid" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--primary)' }}>42</div>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>录音回顾</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--mint)' }}>156</div>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>AI对话</div>
+                    </div>
+                    <div style={{ textAlign: 'center' }}>
+                      <div style={{ fontSize: 32, fontWeight: 700, color: 'var(--purple)' }}>8</div>
+                      <div style={{ color: 'var(--text-secondary)', fontSize: 14 }}>课程导入</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+
+          default:
+            return null;
+        }
+      };
+
+      const navItems = [
+        { icon: 'home', label: '首页' },
+        { icon: 'calendar', label: '课表' },
+        { icon: 'chat', label: 'AI学姐' },
+        { icon: 'book', label: '录音回顾' },
+        { icon: 'user', label: '我的' },
+      ];
+
+      return (
+        <div className="app-container">
+          <aside className="sidebar">
+            <div className="sidebar-logo">
+              <div className="logo-icon">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2">
+                  <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/>
+                </svg>
+              </div>
+              <span className="logo-text">AI小商</span>
+            </div>
+
+            <nav className="sidebar-nav">
+              {navItems.map((item, i) => (
+                <div
+                  key={i}
+                  className={`nav-item ${activeNav === i ? 'active' : ''}`}
+                  onClick={() => setActiveNav(i)}
+                >
+                  <span className="nav-item-icon">
+                    {item.icon === 'home' && <Icons.home />}
+                    {item.icon === 'calendar' && <Icons.calendar />}
+                    {item.icon === 'chat' && <Icons.chat />}
+                    {item.icon === 'book' && <Icons.book />}
+                    {item.icon === 'user' && <Icons.user />}
+                  </span>
+                  {item.label}
+                </div>
+              ))}
+            </nav>
+
+            <div className="sidebar-footer">
+              <div className="user-info">
+                <div className="user-avatar">李</div>
+                <div>
+                  <div className="user-name">李同学</div>
+                  <div className="user-role">在线</div>
+                </div>
+              </div>
+            </div>
+          </aside>
+
+          <main className="main-content">
+            <header className="header">
+              <h1 className="header-title">
+                {navItems[activeNav].label}
+              </h1>
+              <div className="header-actions">
+                <button className="header-btn">
+                  <Icons.settings />
+                  设置
+                </button>
+                <button className="header-btn primary">
+                  + 新建对话
+                </button>
+              </div>
+            </header>
+
+            <div className="content-area">
+              {renderContent()}
+            </div>
+          </main>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>

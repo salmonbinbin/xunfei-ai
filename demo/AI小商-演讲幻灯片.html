@@ -1,0 +1,1431 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI小商 - 智慧校园AI助手 演讲幻灯片</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600;700;900&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --primary: #0891B2;
+      --primary-light: #22D3EE;
+      --primary-dark: #0E7490;
+      --mint: #059669;
+      --sky: #0284C7;
+      --purple: #8B5CF6;
+      --danger: #EF4444;
+      --orange: #F97316;
+      --text-primary: #1E293B;
+      --text-body: #475569;
+      --text-light: #94A3B8;
+      --bg-dark: #0F172A;
+      --bg-card: #1E293B;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: #000;
+    }
+
+    /* Slide Container - Responsive Scaling */
+    .slides-container {
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #000;
+    }
+
+    .slide-wrapper {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      max-width: 100vw;
+      max-height: 100vh;
+    }
+
+    /* Individual Slide */
+    .slide {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+      overflow: hidden;
+    }
+
+    .slide.active {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    /* Slide Inner - Content Area */
+    .slide-inner {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Responsive Typography */
+    .slide-title {
+      font-size: clamp(24px, 4vw, 48px);
+      font-weight: 700;
+    }
+
+    .slide-subtitle {
+      font-size: clamp(14px, 2vw, 32px);
+    }
+
+    /* Slide 1: Cover */
+    .slide-cover {
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #1a365d 50%, var(--primary-dark) 100%);
+      background-size: 200% 200%;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5vh 5vw;
+    }
+
+    .cover-logo {
+      width: clamp(60px, 10vw, 120px);
+      height: clamp(60px, 10vw, 120px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: clamp(16px, 3vw, 32px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: clamp(20px, 4vh, 48px);
+      box-shadow: 0 20px 60px rgba(8, 145, 178, 0.4);
+    }
+
+    .cover-logo svg {
+      width: 50%;
+      height: 50%;
+    }
+
+    .cover-title {
+      font-size: clamp(36px, 8vw, 96px);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: clamp(12px, 2vh, 24px);
+      text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+    }
+
+    .cover-title span {
+      background: linear-gradient(135deg, var(--primary-light), #34D399);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .cover-subtitle {
+      font-size: clamp(16px, 3vw, 32px);
+      color: rgba(255,255,255,0.8);
+      margin-bottom: clamp(24px, 4vh, 48px);
+    }
+
+    .cover-tagline {
+      display: flex;
+      gap: clamp(8px, 2vw, 16px);
+      flex-wrap: wrap;
+      justify-content: center;
+      max-width: 90vw;
+    }
+
+    .cover-tag {
+      padding: clamp(8px, 1.5vh, 12px) clamp(16px, 2vw, 24px);
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 100px;
+      color: rgba(255,255,255,0.9);
+      font-size: clamp(12px, 1.5vw, 18px);
+    }
+
+    /* Slide 2: Overview */
+    .slide-overview {
+      background: #F8FAFC;
+      padding: clamp(30px, 5vh, 60px);
+    }
+
+    .slide-header {
+      display: flex;
+      align-items: center;
+      gap: clamp(10px, 2vw, 16px);
+      margin-bottom: clamp(20px, 4vh, 60px);
+    }
+
+    .slide-num {
+      width: clamp(32px, 4vw, 48px);
+      height: clamp(32px, 4vw, 48px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: clamp(8px, 1.5vw, 14px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: clamp(14px, 2vw, 20px);
+      flex-shrink: 0;
+    }
+
+    .overview-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: clamp(16px, 3vw, 32px);
+      flex: 1;
+    }
+
+    .overview-card {
+      background: #fff;
+      border-radius: clamp(16px, 2vw, 24px);
+      padding: clamp(20px, 3vw, 40px);
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      transition: all 0.3s ease;
+      cursor: pointer;
+    }
+
+    .overview-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.1);
+    }
+
+    .overview-icon {
+      width: clamp(48px, 8vw, 72px);
+      height: clamp(48px, 8vw, 72px);
+      border-radius: clamp(14px, 2vw, 20px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: clamp(16px, 2vh, 24px);
+    }
+
+    .overview-icon svg {
+      width: 50%;
+      height: 50%;
+    }
+
+    .overview-card h3 {
+      font-size: clamp(18px, 2.5vw, 28px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: clamp(10px, 1.5vh, 16px);
+    }
+
+    .overview-card p {
+      font-size: clamp(14px, 1.5vw, 18px);
+      color: var(--text-body);
+      line-height: 1.7;
+    }
+
+    /* Slide 3: Features */
+    .slide-features {
+      background: linear-gradient(180deg, #F8FAFC 0%, #E2E8F0 100%);
+      padding: clamp(30px, 5vh, 60px);
+    }
+
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: clamp(12px, 2vw, 24px);
+      flex: 1;
+    }
+
+    .feature-card {
+      background: #fff;
+      border-radius: clamp(14px, 2vw, 20px);
+      padding: clamp(16px, 2vw, 32px);
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+
+    .feature-card:hover {
+      border-color: var(--primary);
+      transform: scale(1.02);
+    }
+
+    .feature-icon {
+      width: clamp(40px, 6vw, 56px);
+      height: clamp(40px, 6vw, 56px);
+      border-radius: clamp(12px, 1.5vw, 16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: clamp(12px, 2vh, 20px);
+    }
+
+    .feature-icon svg {
+      width: 50%;
+      height: 50%;
+    }
+
+    .feature-card h4 {
+      font-size: clamp(16px, 2vw, 22px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: clamp(8px, 1vh, 12px);
+    }
+
+    .feature-card p {
+      font-size: clamp(13px, 1.2vw, 15px);
+      color: var(--text-body);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .feature-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: clamp(4px, 0.8vh, 6px) clamp(10px, 1.5vw, 14px);
+      background: rgba(8,145,178,0.08);
+      border-radius: 100px;
+      font-size: clamp(11px, 1.2vw, 13px);
+      color: var(--primary);
+      margin-top: clamp(12px, 1.5vh, 16px);
+      width: fit-content;
+    }
+
+    /* Slide 4: Tech */
+    .slide-tech {
+      background: var(--bg-dark);
+      padding: clamp(30px, 5vh, 60px);
+    }
+
+    .slide-tech .slide-title {
+      color: #fff;
+    }
+
+    .tech-diagram {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(10px, 2vw, 40px);
+      flex-wrap: wrap;
+    }
+
+    .tech-layer {
+      background: var(--bg-card);
+      border-radius: clamp(14px, 2vw, 20px);
+      padding: clamp(16px, 2vw, 32px);
+      text-align: center;
+      min-width: clamp(140px, 20vw, 280px);
+    }
+
+    .tech-layer h4 {
+      font-size: clamp(14px, 1.8vw, 20px);
+      font-weight: 600;
+      color: var(--primary-light);
+      margin-bottom: clamp(12px, 1.5vh, 20px);
+    }
+
+    .tech-items {
+      display: flex;
+      flex-wrap: wrap;
+      gap: clamp(6px, 1vw, 12px);
+      justify-content: center;
+    }
+
+    .tech-item {
+      padding: clamp(6px, 1vw, 10px) clamp(10px, 1.5vw, 18px);
+      background: rgba(8,145,178,0.15);
+      border: 1px solid rgba(8,145,178,0.3);
+      border-radius: clamp(6px, 1vw, 10px);
+      color: rgba(255,255,255,0.9);
+      font-size: clamp(11px, 1.2vw, 14px);
+    }
+
+    .tech-arrow {
+      color: var(--primary);
+      font-size: clamp(20px, 3vw, 32px);
+    }
+
+    /* Slide 5: API */
+    .slide-api {
+      background: #F8FAFC;
+      padding: clamp(30px, 5vh, 60px);
+    }
+
+    .api-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: clamp(12px, 2vw, 24px);
+      flex: 1;
+    }
+
+    .api-card {
+      background: #fff;
+      border-radius: clamp(16px, 2vw, 24px);
+      padding: clamp(16px, 2vw, 32px);
+      text-align: center;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.06);
+      transition: all 0.3s ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .api-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    }
+
+    .api-icon {
+      width: clamp(50px, 8vw, 80px);
+      height: clamp(50px, 8vw, 80px);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: clamp(16px, 2vh, 24px);
+    }
+
+    .api-icon svg {
+      width: 50%;
+      height: 50%;
+    }
+
+    .api-card h4 {
+      font-size: clamp(16px, 2vw, 24px);
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: clamp(8px, 1vh, 12px);
+    }
+
+    .api-card p {
+      font-size: clamp(12px, 1.2vw, 14px);
+      color: var(--text-body);
+      line-height: 1.6;
+      flex: 1;
+    }
+
+    .api-status {
+      padding: clamp(6px, 1vw, 8px) clamp(12px, 1.5vw, 16px);
+      background: rgba(5,150,105,0.1);
+      border-radius: 100px;
+      color: var(--mint);
+      font-size: clamp(11px, 1.2vw, 13px);
+      margin-top: clamp(12px, 1.5vh, 16px);
+    }
+
+    /* Slide 6: Workflow */
+    .slide-workflow {
+      background: linear-gradient(135deg, var(--bg-dark) 0%, #1a365d 100%);
+      padding: clamp(30px, 5vh, 60px);
+    }
+
+    .slide-workflow .slide-title {
+      color: #fff;
+    }
+
+    .workflow-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: clamp(10px, 2vw, 20px);
+      flex-wrap: wrap;
+      flex: 1;
+    }
+
+    .workflow-step {
+      background: var(--bg-card);
+      border-radius: clamp(14px, 2vw, 20px);
+      padding: clamp(16px, 2vw, 32px);
+      text-align: center;
+      min-width: clamp(160px, 20vw, 260px);
+      transition: all 0.3s ease;
+    }
+
+    .workflow-step:hover {
+      transform: scale(1.05);
+      box-shadow: 0 12px 40px rgba(8,145,178,0.3);
+    }
+
+    .workflow-num {
+      width: clamp(36px, 5vw, 48px);
+      height: clamp(36px, 5vw, 48px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-weight: 700;
+      font-size: clamp(14px, 2vw, 20px);
+      margin: 0 auto clamp(12px, 1.5vh, 20px);
+    }
+
+    .workflow-step h4 {
+      font-size: clamp(14px, 1.8vw, 20px);
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: clamp(8px, 1vh, 12px);
+    }
+
+    .workflow-step p {
+      font-size: clamp(12px, 1.2vw, 14px);
+      color: rgba(255,255,255,0.7);
+    }
+
+    .workflow-arrow {
+      color: var(--primary-light);
+      font-size: clamp(18px, 2.5vw, 28px);
+    }
+
+    /* Slide 7: Dashboard */
+    .slide-dashboard {
+      background: var(--bg-dark);
+      padding: clamp(30px, 5vh, 60px);
+    }
+
+    .dashboard-title {
+      font-size: clamp(24px, 4vw, 42px);
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: clamp(20px, 3vh, 40px);
+    }
+
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      grid-template-rows: auto auto;
+      gap: clamp(12px, 2vw, 24px);
+      flex: 1;
+    }
+
+    .dash-card {
+      background: var(--bg-card);
+      border-radius: clamp(14px, 2vw, 20px);
+      padding: clamp(16px, 2vw, 28px);
+    }
+
+    .dash-card h4 {
+      font-size: clamp(12px, 1.5vw, 16px);
+      color: rgba(255,255,255,0.6);
+      margin-bottom: clamp(10px, 1.5vh, 16px);
+    }
+
+    .stat-big {
+      font-size: clamp(32px, 5vw, 56px);
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stat-big span {
+      color: var(--primary-light);
+    }
+
+    .stat-trend {
+      display: flex;
+      align-items: center;
+      gap: clamp(4px, 0.8vw, 8px);
+      margin-top: clamp(8px, 1vh, 12px);
+      font-size: clamp(11px, 1.2vw, 14px);
+      color: var(--mint);
+    }
+
+    .chart-area {
+      grid-column: span 2;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .chart-bars {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-around;
+      flex: 1;
+      padding-top: clamp(10px, 2vh, 20px);
+      gap: clamp(8px, 1.5vw, 20px);
+    }
+
+    .chart-bar {
+      width: clamp(30px, 6vw, 60px);
+      background: linear-gradient(180deg, var(--primary-light), var(--primary));
+      border-radius: clamp(4px, 0.8vw, 8px) clamp(4px, 0.8vw, 8px) 0 0;
+      transition: height 1s ease;
+    }
+
+    .pie-area {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex: 1;
+    }
+
+    .pie-chart {
+      width: clamp(100px, 20vw, 200px);
+      height: clamp(100px, 20vw, 200px);
+      border-radius: 50%;
+      background: conic-gradient(
+        var(--primary) 0deg 144deg,
+        var(--mint) 144deg 216deg,
+        var(--purple) 216deg 288deg,
+        var(--orange) 288deg 360deg
+      );
+      position: relative;
+    }
+
+    .pie-center {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 60%;
+      height: 60%;
+      background: var(--bg-card);
+      border-radius: 50%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .pie-center span {
+      color: #fff;
+      font-size: clamp(18px, 3vw, 28px);
+      font-weight: 700;
+    }
+
+    .pie-center small {
+      color: rgba(255,255,255,0.6);
+      font-size: clamp(10px, 1.2vw, 12px);
+    }
+
+    /* Slide 8: Demo */
+    .slide-demo {
+      background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%);
+      padding: clamp(30px, 5vh, 60px);
+    }
+
+    .slide-demo .slide-title {
+      color: #fff;
+    }
+
+    .demo-container {
+      flex: 1;
+      display: flex;
+      gap: clamp(24px, 4vw, 48px);
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .demo-phone {
+      width: clamp(200px, 35vw, 320px);
+      height: auto;
+      aspect-ratio: 9/19;
+      background: #000;
+      border-radius: clamp(30px, 5vw, 50px);
+      padding: clamp(8px, 1.5vw, 12px);
+      box-shadow: 0 30px 80px rgba(0,0,0,0.5);
+    }
+
+    .demo-screen {
+      width: 100%;
+      height: 100%;
+      background: #fff;
+      border-radius: clamp(24px, 4vw, 40px);
+      overflow: hidden;
+      position: relative;
+    }
+
+    .demo-status-bar {
+      height: clamp(24px, 4vw, 44px);
+      background: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+    }
+
+    .demo-island {
+      width: clamp(50px, 10vw, 100px);
+      height: clamp(16px, 3vw, 30px);
+      background: #000;
+      border-radius: clamp(10px, 2vw, 20px);
+    }
+
+    .demo-chat {
+      padding: clamp(10px, 2vw, 20px);
+      height: calc(100% - clamp(24px, 4vw, 44px));
+      background: #F8FAFC;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .demo-messages {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: clamp(8px, 1.5vw, 16px);
+    }
+
+    .demo-msg {
+      max-width: 80%;
+      padding: clamp(8px, 1.5vw, 14px) clamp(12px, 2vw, 18px);
+      border-radius: clamp(12px, 2vw, 18px);
+      font-size: clamp(10px, 1.5vw, 14px);
+      line-height: 1.5;
+    }
+
+    .demo-msg.ai {
+      background: #fff;
+      align-self: flex-start;
+      border-bottom-left-radius: clamp(2px, 0.5vw, 4px);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .demo-msg.user {
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      color: #fff;
+      align-self: flex-end;
+      border-bottom-right-radius: clamp(2px, 0.5vw, 4px);
+    }
+
+    .demo-input {
+      margin-top: clamp(8px, 1.5vw, 16px);
+      display: flex;
+      gap: clamp(6px, 1vw, 10px);
+    }
+
+    .demo-input input {
+      flex: 1;
+      padding: clamp(8px, 1.5vw, 14px) clamp(10px, 2vw, 18px);
+      background: #fff;
+      border: 1px solid #E2E8F0;
+      border-radius: clamp(16px, 3vw, 24px);
+      font-size: clamp(10px, 1.5vw, 14px);
+    }
+
+    .demo-input button {
+      width: clamp(30px, 5vw, 48px);
+      height: clamp(30px, 5vw, 48px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border: none;
+      border-radius: 50%;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .demo-features {
+      flex: 1;
+      min-width: 280px;
+      max-width: 500px;
+    }
+
+    .demo-feature {
+      background: var(--bg-card);
+      border-radius: clamp(12px, 2vw, 16px);
+      padding: clamp(14px, 2vw, 24px);
+      margin-bottom: clamp(12px, 2vw, 20px);
+      display: flex;
+      align-items: center;
+      gap: clamp(12px, 2vw, 20px);
+      transition: all 0.3s ease;
+    }
+
+    .demo-feature:hover {
+      transform: translateX(8px);
+      box-shadow: 0 8px 30px rgba(8,145,178,0.2);
+    }
+
+    .demo-feature-icon {
+      width: clamp(36px, 5vw, 56px);
+      height: clamp(36px, 5vw, 56px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: clamp(12px, 1.5vw, 16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-size: clamp(16px, 2vw, 24px);
+      flex-shrink: 0;
+    }
+
+    .demo-feature h4 {
+      font-size: clamp(14px, 1.8vw, 20px);
+      font-weight: 600;
+      color: #fff;
+      margin-bottom: clamp(4px, 0.5vh, 6px);
+    }
+
+    .demo-feature p {
+      font-size: clamp(12px, 1.2vw, 14px);
+      color: rgba(255,255,255,0.6);
+    }
+
+    /* Slide 9: Thanks */
+    .slide-thanks {
+      background: linear-gradient(135deg, var(--primary-dark) 0%, var(--bg-dark) 100%);
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 5vh 5vw;
+    }
+
+    .thanks-logo {
+      width: clamp(60px, 10vw, 100px);
+      height: clamp(60px, 10vw, 100px);
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      border-radius: clamp(16px, 3vw, 28px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: clamp(24px, 4vh, 40px);
+    }
+
+    .thanks-logo svg {
+      width: 50%;
+      height: 50%;
+    }
+
+    .thanks-title {
+      font-size: clamp(36px, 7vw, 72px);
+      font-weight: 900;
+      color: #fff;
+      margin-bottom: clamp(12px, 2vh, 24px);
+    }
+
+    .thanks-subtitle {
+      font-size: clamp(16px, 2.5vw, 28px);
+      color: rgba(255,255,255,0.8);
+      margin-bottom: clamp(30px, 5vh, 60px);
+    }
+
+    .thanks-links {
+      display: flex;
+      gap: clamp(16px, 2vw, 32px);
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .thanks-link {
+      padding: clamp(10px, 1.5vw, 16px) clamp(20px, 3vw, 32px);
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 100px;
+      color: rgba(255,255,255,0.9);
+      font-size: clamp(12px, 1.5vw, 16px);
+      text-decoration: none;
+      transition: all 0.3s ease;
+    }
+
+    .thanks-link:hover {
+      background: rgba(255,255,255,0.2);
+      transform: translateY(-4px);
+    }
+
+    /* Navigation */
+    .slide-nav {
+      position: fixed;
+      bottom: clamp(16px, 3vh, 30px);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: clamp(8px, 1.5vw, 12px);
+      z-index: 1000;
+      background: rgba(0,0,0,0.5);
+      padding: clamp(8px, 1.5vw, 12px) clamp(16px, 2vw, 24px);
+      border-radius: 100px;
+      backdrop-filter: blur(10px);
+    }
+
+    .slide-nav-dot {
+      width: clamp(10px, 1.5vw, 12px);
+      height: clamp(10px, 1.5vw, 12px);
+      background: rgba(255,255,255,0.3);
+      border-radius: 50%;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .slide-nav-dot.active {
+      background: var(--primary-light);
+      transform: scale(1.2);
+    }
+
+    .slide-nav-dot:hover {
+      background: rgba(255,255,255,0.6);
+    }
+
+    /* Keyboard hint */
+    .keyboard-hint {
+      position: fixed;
+      bottom: clamp(60px, 10vh, 80px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.6);
+      color: rgba(255,255,255,0.6);
+      padding: clamp(8px, 1vw, 12px) clamp(16px, 2vw, 24px);
+      border-radius: 8px;
+      font-size: clamp(11px, 1.2vw, 13px);
+      z-index: 1000;
+      backdrop-filter: blur(10px);
+    }
+
+    .keyboard-hint kbd {
+      background: rgba(255,255,255,0.15);
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin: 0 4px;
+    }
+
+    /* Animations */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .animate-in {
+      animation: fadeInUp 0.6s ease forwards;
+    }
+
+    .animate-delay-1 { animation-delay: 0.15s; opacity: 0; }
+    .animate-delay-2 { animation-delay: 0.3s; opacity: 0; }
+    .animate-delay-3 { animation-delay: 0.45s; opacity: 0; }
+    .animate-delay-4 { animation-delay: 0.6s; opacity: 0; }
+    .animate-delay-5 { animation-delay: 0.75s; opacity: 0; }
+  </style>
+</head>
+<body>
+  <div class="slides-container">
+    <div class="slide-wrapper">
+      <!-- Slide 1: Cover -->
+      <section class="slide slide-cover active">
+        <div class="slide-inner">
+          <div class="cover-logo animate-in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/>
+              <circle cx="7.5" cy="14.5" r="1.5"/>
+              <circle cx="16.5" cy="14.5" r="1.5"/>
+            </svg>
+          </div>
+          <h1 class="cover-title animate-in animate-delay-1">
+            AI<span>小商</span>
+          </h1>
+          <p class="cover-subtitle animate-in animate-delay-2">智慧校园AI伙伴</p>
+          <div class="cover-tagline animate-in animate-delay-3">
+            <span class="cover-tag">智能对话</span>
+            <span class="cover-tag">语音交互</span>
+            <span class="cover-tag">讯飞API</span>
+            <span class="cover-tag">校园定制</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 2: Overview -->
+      <section class="slide slide-overview">
+        <div class="slide-inner">
+          <div class="slide-header">
+            <div class="slide-num">02</div>
+            <h2 class="slide-title">产品概述</h2>
+          </div>
+          <div class="overview-grid">
+            <div class="overview-card animate-in animate-delay-1">
+              <div class="overview-icon" style="background: rgba(8,145,178,0.1); color: var(--primary);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+              </div>
+              <h3>产品定位</h3>
+              <p>基于讯飞开放平台打造的智慧校园AI助手，一站式解决师生的校园生活、学习、办公需求。</p>
+            </div>
+            <div class="overview-card animate-in animate-delay-2">
+              <div class="overview-icon" style="background: rgba(5,150,105,0.1); color: var(--mint);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/>
+                  <circle cx="9" cy="7" r="4"/>
+                  <path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/>
+                </svg>
+              </div>
+              <h3>目标用户</h3>
+              <p>广州商学院全体师生，特别是需要课表管理、会议记录、选课咨询的在校大学生。</p>
+            </div>
+            <div class="overview-card animate-in animate-delay-3">
+              <div class="overview-icon" style="background: rgba(139,92,246,0.1); color: var(--purple);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+                </svg>
+              </div>
+              <h3>核心价值</h3>
+              <p>省时间：减少多系统切换。有个性：AI记住你的偏好。专业化：讯飞全能力集成。</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 3: Features -->
+      <section class="slide slide-features">
+        <div class="slide-inner">
+          <div class="slide-header">
+            <div class="slide-num">03</div>
+            <h2 class="slide-title">核心功能</h2>
+          </div>
+          <div class="features-grid">
+            <div class="feature-card animate-in animate-delay-1">
+              <div class="feature-icon" style="background: rgba(8,145,178,0.1); color: var(--primary);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="4" width="18" height="18" rx="2"/>
+                  <line x1="16" y1="2" x2="16" y2="6"/>
+                  <line x1="8" y1="2" x2="8" y2="6"/>
+                  <line x1="3" y1="10" x2="21" y2="10"/>
+                </svg>
+              </div>
+              <h4>智能课表管家</h4>
+              <p>图片OCR导入+自然语言添加日程+首页智能提醒</p>
+              <span class="feature-badge">AI解析</span>
+            </div>
+            <div class="feature-card animate-in animate-delay-2">
+              <div class="feature-icon" style="background: rgba(5,150,105,0.1); color: var(--mint);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                  <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                </svg>
+              </div>
+              <h4>AI学姐对话</h4>
+              <p>校园专属问答+语音输入/播报+情感陪伴模式</p>
+              <span class="feature-badge" style="background: rgba(5,150,105,0.1); color: var(--mint);">7×24在线</span>
+            </div>
+            <div class="feature-card animate-in animate-delay-3">
+              <div class="feature-icon" style="background: rgba(139,92,246,0.1); color: var(--purple);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+              </div>
+              <h4>录音回顾</h4>
+              <p>MP3上传→ASR转写→星火总结→导出DOCX/PPT</p>
+              <span class="feature-badge" style="background: rgba(139,92,246,0.1); color: var(--purple);">智能总结</span>
+            </div>
+            <div class="feature-card animate-in animate-delay-4">
+              <div class="feature-icon" style="background: rgba(249,115,22,0.1); color: var(--orange);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/>
+                </svg>
+              </div>
+              <h4>智能选课助手</h4>
+              <p>专业+规划→AI推荐选课方案</p>
+              <span class="feature-badge" style="background: rgba(249,115,22,0.1); color: var(--orange);">个性化推荐</span>
+            </div>
+            <div class="feature-card animate-in animate-delay-5">
+              <div class="feature-icon" style="background: rgba(2,132,199,0.1); color: var(--sky);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21,15 16,10 5,21"/>
+                </svg>
+              </div>
+              <h4>课表OCR导入</h4>
+              <p>上传课表图片，AI自动识别课程信息</p>
+              <span class="feature-badge" style="background: rgba(2,132,199,0.1); color: var(--sky);">一键导入</span>
+            </div>
+            <div class="feature-card animate-in animate-delay-5">
+              <div class="feature-icon" style="background: rgba(239,68,68,0.1); color: var(--danger);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+                  <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+                </svg>
+              </div>
+              <h4>校园活动助手</h4>
+              <p>AI生成活动策划/宣传文案</p>
+              <span class="feature-badge" style="background: rgba(239,68,68,0.1); color: var(--danger);">创意无限</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 4: Tech -->
+      <section class="slide slide-tech">
+        <div class="slide-inner">
+          <div class="slide-header">
+            <div class="slide-num">04</div>
+            <h2 class="slide-title">技术架构</h2>
+          </div>
+          <div class="tech-diagram">
+            <div class="tech-layer animate-in animate-delay-1">
+              <h4>用户层</h4>
+              <div class="tech-items">
+                <span class="tech-item">PC浏览器</span>
+                <span class="tech-item">手机浏览器</span>
+                <span class="tech-item">微信</span>
+              </div>
+            </div>
+            <span class="tech-arrow animate-in animate-delay-1">→</span>
+            <div class="tech-layer animate-in animate-delay-2">
+              <h4>Nginx</h4>
+              <div class="tech-items">
+                <span class="tech-item">反向代理</span>
+                <span class="tech-item">SSL终止</span>
+                <span class="tech-item">静态资源</span>
+              </div>
+            </div>
+            <span class="tech-arrow animate-in animate-delay-2">→</span>
+            <div class="tech-layer animate-in animate-delay-3">
+              <h4>应用层</h4>
+              <div class="tech-items">
+                <span class="tech-item">Vue.js 3</span>
+                <span class="tech-item">FastAPI</span>
+                <span class="tech-item">Pinia</span>
+              </div>
+            </div>
+            <span class="tech-arrow animate-in animate-delay-3">→</span>
+            <div class="tech-layer animate-in animate-delay-4">
+              <h4>数据层</h4>
+              <div class="tech-items">
+                <span class="tech-item">MySQL 8.0</span>
+                <span class="tech-item">ChromaDB</span>
+              </div>
+            </div>
+            <span class="tech-arrow animate-in animate-delay-4">→</span>
+            <div class="tech-layer animate-in animate-delay-5">
+              <h4>AI能力</h4>
+              <div class="tech-items">
+                <span class="tech-item">讯飞星火</span>
+                <span class="tech-item">ASR/TTS</span>
+                <span class="tech-item">OCR/NLP</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 5: API -->
+      <section class="slide slide-api">
+        <div class="slide-inner">
+          <div class="slide-header">
+            <div class="slide-num">05</div>
+            <h2 class="slide-title">讯飞API能力矩阵</h2>
+          </div>
+          <div class="api-grid">
+            <div class="api-card animate-in animate-delay-1">
+              <div class="api-icon" style="background: rgba(8,145,178,0.1); color: var(--primary);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+                </svg>
+              </div>
+              <h4>星火大模型</h4>
+              <p>AI对话、总结生成、选课建议、意图解析</p>
+              <span class="api-status">✓ 已集成</span>
+            </div>
+            <div class="api-card animate-in animate-delay-2">
+              <div class="api-icon" style="background: rgba(5,150,105,0.1); color: var(--mint);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                  <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                </svg>
+              </div>
+              <h4>ASR语音识别</h4>
+              <p>语音输入、录音转写、实时字幕</p>
+              <span class="api-status">✓ 已集成</span>
+            </div>
+            <div class="api-card animate-in animate-delay-3">
+              <div class="api-icon" style="background: rgba(249,115,22,0.1); color: var(--orange);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/>
+                  <path d="M15.54 8.46a5 5 0 010 7.07"/>
+                  <path d="M19.07 4.93a10 10 0 010 14.14"/>
+                </svg>
+              </div>
+              <h4>TTS语音合成</h4>
+              <p>AI回复播报、情感模式、多音色</p>
+              <span class="api-status">✓ 已集成</span>
+            </div>
+            <div class="api-card animate-in animate-delay-4">
+              <div class="api-icon" style="background: rgba(139,92,246,0.1); color: var(--purple);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2"/>
+                  <circle cx="8.5" cy="8.5" r="1.5"/>
+                  <polyline points="21,15 16,10 5,21"/>
+                </svg>
+              </div>
+              <h4>OCR文字识别</h4>
+              <p>课表图片识别、文档扫描</p>
+              <span class="api-status">✓ 已集成</span>
+            </div>
+            <div class="api-card animate-in animate-delay-5">
+              <div class="api-icon" style="background: rgba(239,68,68,0.1); color: var(--danger);">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M8 14s1.5 2 4 2 4-2 4-2"/>
+                  <line x1="9" y1="9" x2="9.01" y2="9"/>
+                  <line x1="15" y1="9" x2="15.01" y2="9"/>
+                </svg>
+              </div>
+              <h4>NLP情感分析</h4>
+              <p>情感识别、意图分析、语义理解</p>
+              <span class="api-status">✓ 已集成</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 6: Workflow -->
+      <section class="slide slide-workflow">
+        <div class="slide-inner">
+          <div class="slide-header">
+            <div class="slide-num">06</div>
+            <h2 class="slide-title">核心业务流程</h2>
+          </div>
+          <div class="workflow-flow">
+            <div class="workflow-step animate-in animate-delay-1">
+              <div class="workflow-num">1</div>
+              <h4>上传课表图片</h4>
+              <p>支持截图、拍照</p>
+            </div>
+            <span class="workflow-arrow animate-in animate-delay-1">→</span>
+            <div class="workflow-step animate-in animate-delay-2">
+              <div class="workflow-num">2</div>
+              <h4>OCR + AI解析</h4>
+              <p>讯飞OCR识别 + 星火大模型结构化</p>
+            </div>
+            <span class="workflow-arrow animate-in animate-delay-2">→</span>
+            <div class="workflow-step animate-in animate-delay-3">
+              <div class="workflow-num">3</div>
+              <h4>用户确认</h4>
+              <p>预览识别结果，一键导入</p>
+            </div>
+            <span class="workflow-arrow animate-in animate-delay-3">→</span>
+            <div class="workflow-step animate-in animate-delay-4">
+              <div class="workflow-num">4</div>
+              <h4>写入数据库</h4>
+              <p>课程表、日程自动同步</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 7: Dashboard -->
+      <section class="slide slide-dashboard">
+        <div class="slide-inner">
+          <h2 class="dashboard-title animate-in">数据大屏 · 实时监控</h2>
+          <div class="dashboard-grid">
+            <div class="dash-card animate-in animate-delay-1">
+              <h4>用户总数</h4>
+              <div class="stat-big">2,847</div>
+              <div class="stat-trend">↑ 较上月 +12%</div>
+            </div>
+            <div class="dash-card animate-in animate-delay-2">
+              <h4>AI对话数</h4>
+              <div class="stat-big">18.6<span>K</span></div>
+              <div class="stat-trend">↑ 较上月 +8%</div>
+            </div>
+            <div class="dash-card animate-in animate-delay-3">
+              <h4>API调用</h4>
+              <div class="stat-big">52.3<span>K</span></div>
+              <div class="stat-trend">↑ 较上月 +23%</div>
+            </div>
+            <div class="dash-card chart-area animate-in animate-delay-4">
+              <h4>周对话趋势</h4>
+              <div class="chart-bars">
+                <div class="chart-bar" style="height: 60%;"></div>
+                <div class="chart-bar" style="height: 90%;"></div>
+                <div class="chart-bar" style="height: 45%;"></div>
+                <div class="chart-bar" style="height: 100%;"></div>
+                <div class="chart-bar" style="height: 75%;"></div>
+                <div class="chart-bar" style="height: 85%;"></div>
+                <div class="chart-bar" style="height: 65%;"></div>
+              </div>
+            </div>
+            <div class="dash-card pie-area animate-in animate-delay-5">
+              <div class="pie-chart">
+                <div class="pie-center">
+                  <span>86%</span>
+                  <small>成功率</small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 8: Demo -->
+      <section class="slide slide-demo">
+        <div class="slide-inner">
+          <div class="slide-header">
+            <div class="slide-num">07</div>
+            <h2 class="slide-title">功能演示</h2>
+          </div>
+          <div class="demo-container">
+            <div class="demo-phone animate-in animate-delay-1">
+              <div class="demo-screen">
+                <div class="demo-status-bar">
+                  <div class="demo-island"></div>
+                </div>
+                <div class="demo-chat">
+                  <div class="demo-messages">
+                    <div class="demo-msg ai">你好！我是AI学姐，有什么可以帮你的吗？</div>
+                    <div class="demo-msg user">学姐，我想问一下选课的事</div>
+                    <div class="demo-msg ai">当然可以！根据你的专业，我建议你优先考虑选修数据分析相关的课程~</div>
+                  </div>
+                  <div class="demo-input">
+                    <input type="text" placeholder="输入消息..." />
+                    <button>
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="22" y1="2" x2="11" y2="13"/>
+                        <polygon points="22,2 15,22 11,13 2,9"/>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div class="demo-features">
+              <div class="demo-feature animate-in animate-delay-2">
+                <div class="demo-feature-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+                    <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4>语音输入</h4>
+                  <p>按住麦克风键，语音实时转文字</p>
+                </div>
+              </div>
+              <div class="demo-feature animate-in animate-delay-3">
+                <div class="demo-feature-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="11,5 6,9 2,9 2,15 6,15 11,19"/>
+                    <path d="M15.54 8.46a5 5 0 010 7.07"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4>语音播报</h4>
+                  <p>AI回复支持TTS语音朗读</p>
+                </div>
+              </div>
+              <div class="demo-feature animate-in animate-delay-4">
+                <div class="demo-feature-icon">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M20.84 4.61a5.5 5.5 0 00-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 00-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 000-7.78z"/>
+                  </svg>
+                </div>
+                <div>
+                  <h4>情感陪伴</h4>
+                  <p>温暖倾听模式，智能情绪识别</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Slide 9: Thanks -->
+      <section class="slide slide-thanks">
+        <div class="slide-inner" style="justify-content: center; align-items: center;">
+          <div class="thanks-logo animate-in">
+            <svg viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2">
+              <path d="M12 2a2 2 0 012 2c0 .74-.4 1.39-1 1.73V7h1a7 7 0 017 7h1a1 1 0 011 1v3a1 1 0 01-1 1h-1v1a2 2 0 01-2 2H5a2 2 0 01-2-2v-1H2a1 1 0 01-1-1v-3a1 1 0 011-1h1a7 7 0 017-7h1V5.73c-.6-.34-1-.99-1-1.73a2 2 0 012-2z"/>
+            </svg>
+          </div>
+          <h1 class="thanks-title animate-in animate-delay-1">感谢聆听</h1>
+          <p class="thanks-subtitle animate-in animate-delay-2">AI小商 · 智慧校园AI伙伴</p>
+          <div class="thanks-links animate-in animate-delay-3">
+            <span class="thanks-link">讯飞开放平台</span>
+            <span class="thanks-link">广州商学院</span>
+            <span class="thanks-link">Demo演示</span>
+          </div>
+        </div>
+      </section>
+    </div>
+  </div>
+
+  <div class="slide-nav">
+    <div class="slide-nav-dot active" data-slide="0"></div>
+    <div class="slide-nav-dot" data-slide="1"></div>
+    <div class="slide-nav-dot" data-slide="2"></div>
+    <div class="slide-nav-dot" data-slide="3"></div>
+    <div class="slide-nav-dot" data-slide="4"></div>
+    <div class="slide-nav-dot" data-slide="5"></div>
+    <div class="slide-nav-dot" data-slide="6"></div>
+    <div class="slide-nav-dot" data-slide="7"></div>
+    <div class="slide-nav-dot" data-slide="8"></div>
+  </div>
+
+  <div class="keyboard-hint">
+    按 <kbd>←</kbd> <kbd>→</kbd> 或 <kbd>空格</kbd> 翻页 · <kbd>F</kbd> 全屏
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const dots = document.querySelectorAll('.slide-nav-dot');
+    let currentSlide = 0;
+
+    function goToSlide(index) {
+      if (index < 0 || index >= slides.length) return;
+      slides[currentSlide].classList.remove('active');
+      dots[currentSlide].classList.remove('active');
+      currentSlide = index;
+      slides[currentSlide].classList.add('active');
+      dots[currentSlide].classList.add('active');
+    }
+
+    function nextSlide() {
+      if (currentSlide < slides.length - 1) {
+        goToSlide(currentSlide + 1);
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        goToSlide(currentSlide - 1);
+      }
+    }
+
+    // Keyboard navigation
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        e.preventDefault();
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        if (!document.fullscreenElement) {
+          document.documentElement.requestFullscreen();
+        } else {
+          document.exitFullscreen();
+        }
+      }
+    });
+
+    // Dot navigation
+    dots.forEach((dot, i) => {
+      dot.addEventListener('click', () => goToSlide(i));
+    });
+
+    // Touch/swipe support
+    let touchStartX = 0;
+    document.addEventListener('touchstart', (e) => {
+      touchStartX = e.touches[0].clientX;
+    });
+
+    document.addEventListener('touchend', (e) => {
+      const touchEndX = e.changedTouches[0].clientX;
+      const diff = touchStartX - touchEndX;
+      if (Math.abs(diff) > 50) {
+        if (diff > 0) nextSlide();
+        else prevSlide();
+      }
+    });
+  </script>
+</body>
+</html>

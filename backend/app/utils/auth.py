@@ -35,13 +35,14 @@ def get_password_hash(password: str) -> str:
     return pwd_context.hash(password)
 
 
-def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None) -> str:
+def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None, role: Optional[str] = None) -> str:
     """
     生成JWT access token
 
     Args:
         user_id: 用户ID（整数）
         expires_delta: 可选的过期时间delta
+        role: 可选的用户角色
 
     Returns:
         编码后的JWT token字符串
@@ -56,6 +57,9 @@ def create_access_token(user_id: int, expires_delta: Optional[timedelta] = None)
         "exp": expire,
         "iat": datetime.utcnow()
     }
+
+    if role:
+        payload["role"] = role
 
     encoded_jwt = jwt.encode(
         payload,
@@ -152,6 +156,64 @@ async def get_current_user(
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="用户已被禁用"
+        )
+
+    return user
+
+
+async def get_current_teacher(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    db: AsyncSession = Depends(get_db)
+) -> User:
+    """
+    FastAPI依赖：从request中获取当前认证教师用户
+
+    Args:
+        credentials: HTTP Bearer token
+        db: 数据库会话
+
+    Returns:
+        当前登录的教师用户对象
+
+    Raises:
+        HTTPException: token无效、用户不存在或不是教师角色
+    """
+    credentials_exception = HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="认证失败，请重新登录",
+        headers={"WWW-Authenticate": "Bearer"},
+    )
+
+    try:
+        token = credentials.credentials
+        user_id = get_user_id_from_token(token)
+    except UnauthorizedException:
+        raise credentials_exception
+
+    # 从数据库查询用户（eagerly load teacher_profile避免异步lazy load问题）
+    from sqlalchemy.orm import selectinload
+    result = await db.execute(
+        select(User)
+        .options(selectinload(User.teacher_profile))
+        .where(User.id == user_id)
+    )
+    user = result.scalar_one_or_none()
+
+    if user is None:
+        raise credentials_exception
+
+    if not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="用户已被禁用"
+        )
+
+    # 验证角色为教师
+    from app.models.user import UserRole
+    if user.role != UserRole.teacher:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="教师权限required"
         )
 
     return user

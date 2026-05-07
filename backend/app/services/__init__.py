@@ -5,6 +5,7 @@ from app.services.asr_service import asr_service, ASRService
 from app.services.summary_service import summary_service, SummaryService
 from app.services.pptx_generator import pptx_generator, PptxGeneratorService
 from app.services.translation_service import translation_service, TranslationService
+from app.services.feishu_service import feishu_service, FeishuService
 
 __all__ = [
     "docx_generator",
@@ -17,4 +18,6 @@ __all__ = [
     "PptxGeneratorService",
     "translation_service",
     "TranslationService",
+    "feishu_service",
+    "FeishuService",
 ]

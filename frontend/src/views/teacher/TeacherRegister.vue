@@ -231,7 +231,9 @@ async function handleRegister() {
       ElMessage.success('注册成功')
       router.push('/teacher')
     } catch (error) {
-      ElMessage.error(error.response?.data?.error?.message || '注册失败，请稍后重试')
+      console.error('[TeacherRegister] Register error:', error)
+      const errorMsg = error.response?.data?.detail || error.response?.data?.error?.message || error.message || '注册失败，请稍后重试'
+      ElMessage.error(errorMsg)
     } finally {
       loading.value = false
     }

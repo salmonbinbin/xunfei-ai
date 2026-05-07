@@ -9,6 +9,29 @@ const routes = [
     meta: { requiresAuth: false }
   },
   {
+    path: '/teacher/login',
+    name: 'TeacherLogin',
+    component: () => import('@/views/teacher/TeacherLogin.vue'),
+    meta: { guest: true }
+  },
+  {
+    path: '/teacher/register',
+    name: 'TeacherRegister',
+    component: () => import('@/views/teacher/TeacherRegister.vue'),
+    meta: { guest: true }
+  },
+  {
+    path: '/teacher',
+    component: () => import('@/layouts/MainLayout.vue'),
+    meta: { requiresAuth: true, role: 'teacher' },
+    children: [
+      { path: '', redirect: '/teacher/grade' },
+      { path: 'grade', component: () => import('@/views/teacher/TeacherGrade.vue') },
+      { path: 'notification', component: () => import('@/views/teacher/TeacherNotification.vue') },
+      { path: 'lesson-plan', component: () => import('@/views/teacher/TeacherLessonPlan.vue') },
+    ]
+  },
+  {
     path: '/guide',
     name: 'Guide',
     component: () => import('@/views/Guide.vue'),
