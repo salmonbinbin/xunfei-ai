@@ -11,6 +11,7 @@ from app.models.knowledge import KnowledgeBase
 from app.models.admin import AdminUser
 from app.models.timetable import CourseAIInsight, CourseReminder
 from app.models.translation import TranslationTask
+from app.models.grade import GradeRecord, GradeItem, ExamStatus
 
 __all__ = [
     "BaseModel",
@@ -32,4 +33,7 @@ __all__ = [
     "CourseAIInsight",
     "CourseReminder",
     "TranslationTask",
+    "GradeRecord",
+    "GradeItem",
+    "ExamStatus",
 ]

@@ -10,6 +10,23 @@ from app.schemas.review import (
     ExportRequest,
     ExportResponse,
 )
+from app.schemas.grade import (
+    GradeUploadRequest,
+    GradeItemBase,
+    GradeItemResponse,
+    GradeWeights,
+    GradeDistributionItem,
+    GradeBasicStats,
+    GradeComponentStats,
+    GradeStatsResponse,
+    GradeRecordListItem,
+    GradeRecordListResponse,
+    GradeRecordDetailResponse,
+    ExamAnalysis,
+    AIReportResponse,
+    GradeUploadResponse,
+    GradeDeleteResponse,
+)
 
 __all__ = [
     "ReviewRecordCreate",
@@ -21,4 +38,19 @@ __all__ = [
     "ReviewUploadResponse",
     "ExportRequest",
     "ExportResponse",
+    "GradeUploadRequest",
+    "GradeItemBase",
+    "GradeItemResponse",
+    "GradeWeights",
+    "GradeDistributionItem",
+    "GradeBasicStats",
+    "GradeComponentStats",
+    "GradeStatsResponse",
+    "GradeRecordListItem",
+    "GradeRecordListResponse",
+    "GradeRecordDetailResponse",
+    "ExamAnalysis",
+    "AIReportResponse",
+    "GradeUploadResponse",
+    "GradeDeleteResponse",
 ]

@@ -6,6 +6,7 @@ from app.services.summary_service import summary_service, SummaryService
 from app.services.pptx_generator import pptx_generator, PptxGeneratorService
 from app.services.translation_service import translation_service, TranslationService
 from app.services.feishu_service import feishu_service, FeishuService
+from app.services.grade_service import grade_service, GradeService
 
 __all__ = [
     "docx_generator",
@@ -20,4 +21,6 @@ __all__ = [
     "TranslationService",
     "feishu_service",
     "FeishuService",
+    "grade_service",
+    "GradeService",
 ]

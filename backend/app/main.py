@@ -15,7 +15,7 @@ import uuid
 import os
 
 from app.routers import auth, chat, timetable, schedule, review, export, admin, translate, activity, course_advisor, profile, recent
-from app.routers.teacher import teacher_auth_router
+from app.routers.teacher import teacher_auth_router, teacher_grade_router
 from app.utils.logging import setup_logger, api_logger
 from app.config import settings
 
@@ -115,6 +115,7 @@ app.include_router(course_advisor.router)
 app.include_router(profile.router)
 app.include_router(recent.router)
 app.include_router(teacher_auth_router)
+app.include_router(teacher_grade_router)
 
 
 # 验证异常处理器 - 打印详细的验证错误日志

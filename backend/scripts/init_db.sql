@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS `users` (
   `password_hash` VARCHAR(255) NOT NULL COMMENT '密码hash',
   `avatar_url` VARCHAR(500) COMMENT '头像URL',
   `is_active` TINYINT(1) DEFAULT 1 COMMENT '账号状态',
+  `role` ENUM('student', 'teacher', 'admin') DEFAULT 'student' COMMENT '角色',
   `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `last_login` DATETIME COMMENT '最后登录',
@@ -224,10 +225,10 @@ CREATE TABLE IF NOT EXISTS `admin_users` (
 -- 密码统一为：123456
 -- bcrypt hash for "123456": $2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.S0l8lCLsKaC3qK
 -- ============================================
-INSERT INTO `users` (`openid`, `unionid`, `nickname`, `phone`, `password_hash`, `avatar_url`, `is_active`) VALUES
-('test_openid_1', 'test_unionid_1', '张三', '13800138001', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.S0l8lCLsKaC3qK', 'https://example.com/avatar1.jpg', 1),
-('test_openid_2', 'test_unionid_2', '李四', '13800138002', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.S0l8lCLsKaC3qK', 'https://example.com/avatar2.jpg', 1),
-('test_openid_3', 'test_unionid_3', '王五', '13800138003', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.S0l8lCLsKaC3qK', 'https://example.com/avatar3.jpg', 1);
+INSERT INTO `users` (`openid`, `unionid`, `nickname`, `phone`, `password_hash`, `avatar_url`, `is_active`, `role`) VALUES
+('test_openid_1', 'test_unionid_1', '张三', '13800138001', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.S0l8lCLsKaC3qK', 'https://example.com/avatar1.jpg', 1, 'student'),
+('test_openid_2', 'test_unionid_2', '李四', '13800138002', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.S0l8lCLsKaC3qK', 'https://example.com/avatar2.jpg', 1, 'student'),
+('test_openid_3', 'test_unionid_3', '王五', '13800138003', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.S0l8lCLsKaC3qK', 'https://example.com/avatar3.jpg', 1, 'student');
 
 -- ============================================
 -- 初始化学生画像数据
@@ -357,3 +358,70 @@ INSERT INTO `knowledge_base` (`category`, `question`, `answer`, `source`) VALUES
 -- 密码: admin123 (bcrypt hash)
 INSERT INTO `admin_users` (`username`, `password_hash`, `role`, `nickname`) VALUES
 ('admin', '$2b$12$o7zXS6UrIBcO5.rP5gOVXeoIFmjkgCuYjA3O1XHPD8EBhnYdzQXPa', 'super_admin', '系统管理员');
+
+-- ============================================
+-- 成绩管理相关表（教师端功能）
+-- ============================================
+-- 成绩记录表
+CREATE TABLE IF NOT EXISTS `grade_records` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+  `teacher_id` INT NOT NULL COMMENT '教师用户ID',
+  `course_name` VARCHAR(200) NOT NULL COMMENT '课程名称',
+  `semester` VARCHAR(50) COMMENT '学期（如2026春季）',
+  `class_name` VARCHAR(100) COMMENT '班级名称',
+  `file_path` VARCHAR(500) COMMENT '原始Excel路径',
+  `weights` JSON COMMENT '成绩权重配置',
+  `ai_report` TEXT COMMENT 'AI分析报告内容',
+  `stats_data` JSON COMMENT '统计数据（分布、均分等）',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` TINYINT(1) DEFAULT 0 COMMENT '软删除标记',
+  FOREIGN KEY (`teacher_id`) REFERENCES `users`(`id`) ON DELETE CASCADE,
+  INDEX `idx_record_teacher` (`teacher_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='成绩记录表';
+
+-- 成绩明细表
+CREATE TABLE IF NOT EXISTS `grade_items` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+  `record_id` INT NOT NULL COMMENT '关联grade_records',
+  `student_name` VARCHAR(100) NOT NULL COMMENT '学生姓名',
+  `student_no` VARCHAR(50) COMMENT '学号',
+  `usual_score` DECIMAL(5,2) COMMENT '平时分',
+  `midterm_score` DECIMAL(5,2) COMMENT '期中分',
+  `final_score` DECIMAL(5,2) COMMENT '期末分',
+  `practice_score` DECIMAL(5,2) COMMENT '实验/实践分',
+  `total_score` DECIMAL(5,2) COMMENT '总评',
+  `rank` INT COMMENT '排名',
+  `status` ENUM('normal', 'absent', 'deferred') DEFAULT 'normal' COMMENT '考试状态',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` TINYINT(1) DEFAULT 0 COMMENT '软删除标记',
+  FOREIGN KEY (`record_id`) REFERENCES `grade_records`(`id`) ON DELETE CASCADE,
+  INDEX `idx_item_record` (`record_id`),
+  INDEX `idx_item_rank` (`record_id`, `rank`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='成绩明细表';
+
+-- ============================================
+-- 教师画像表（扩展）
+-- ============================================
+CREATE TABLE IF NOT EXISTS `teacher_profiles` (
+  `id` INT PRIMARY KEY AUTO_INCREMENT COMMENT '主键',
+  `user_id` INT NOT NULL UNIQUE COMMENT '关联users',
+  `department` VARCHAR(100) COMMENT '院系',
+  `office` VARCHAR(100) COMMENT '办公室',
+  `title` VARCHAR(50) COMMENT '职称（教授/副教授/讲师）',
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+  `updated_at` DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
+  `is_deleted` TINYINT(1) DEFAULT 0 COMMENT '软删除标记',
+  FOREIGN KEY (`user_id`) REFERENCES `users`(`id`) ON DELETE CASCADE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci COMMENT='教师画像表';
+
+-- ============================================
+-- 初始化教师测试用户
+-- 密码统一为：123456
+-- ============================================
+INSERT INTO `users` (`openid`, `unionid`, `nickname`, `phone`, `password_hash`, `avatar_url`, `is_active`, `role`) VALUES
+('teacher_openid_1', 'teacher_unionid_1', '张教授', '13900139001', '$2b$12$LQv3c1yqBWVHxkd0LHAkCOYz6TtxMQJqhN8/X4.S0l8lCLsKaC3qK', 'https://example.com/teacher1.jpg', 1, 'teacher');
+
+INSERT INTO `teacher_profiles` (`user_id`, `department`, `office`, `title`) VALUES
+((SELECT id FROM users WHERE phone = '13900139001'), '经济管理学院', '行政楼302', '教授');

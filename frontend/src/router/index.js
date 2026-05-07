@@ -27,6 +27,7 @@ const routes = [
     children: [
       { path: '', name: 'TeacherHome', component: () => import('@/views/teacher/TeacherHome.vue') },
       { path: 'grade', name: 'TeacherGrade', component: () => import('@/views/teacher/TeacherGrade.vue') },
+      { path: 'grade/:id', name: 'TeacherGradeDetail', component: () => import('@/views/teacher/TeacherGradeDetail.vue') },
       { path: 'notification', name: 'TeacherNotification', component: () => import('@/views/teacher/TeacherNotification.vue') },
       { path: 'lesson-plan', name: 'TeacherLessonPlan', component: () => import('@/views/teacher/TeacherLessonPlan.vue') },
       { path: 'profile', name: 'TeacherProfile', component: () => import('@/views/teacher/TeacherProfile.vue') },
