@@ -40,6 +40,7 @@ import websocket
 from app.config import settings
 from app.utils.errors import ThirdPartyException, ValidationException
 from app.services.order_result import parse_order_result
+from app.services.api_log_service import save_api_log
 
 logger = logging.getLogger("xfyun")
 
@@ -494,6 +495,8 @@ class ASRService:
         Returns:
             {"text": "...", "segments": [...]}
         """
+        import time
+        start_time = time.time()
         self.logger.info(f"[ASR] recognize_file started, audio_path: {audio_path}, language: {language}")
 
         if not os.path.exists(audio_path):
@@ -520,12 +523,46 @@ class ASRService:
             result = await self._transcribe_wav(wav_path)
             result["duration_ms"] = duration_ms
 
-            self.logger.info(f"[ASR] recognize_file completed, text length: {len(result.get('text', ''))}, duration: {duration_ms}ms")
+            response_time_ms = int((time.time() - start_time) * 1000)
+            self.logger.info(f"[ASR] recognize_file completed, text length: {len(result.get('text', ''))}, duration: {duration_ms}ms, response_time: {response_time_ms}ms")
+
+            # 记录API调用日志（异步，不阻塞）
+            try:
+                asyncio.create_task(save_api_log(
+                    api_name="asr",
+                    call_type="success",
+                    response_time_ms=response_time_ms,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[ASR] Failed to save API log: {log_err}")
+
             return result
 
         except ThirdPartyException:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                asyncio.create_task(save_api_log(
+                    api_name="asr",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[ASR] Failed to save API log: {log_err}")
             raise
         except Exception as e:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                asyncio.create_task(save_api_log(
+                    api_name="asr",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    error_msg=str(e)[:200],
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[ASR] Failed to save API log: {log_err}")
             self.logger.error(f"[ASR] recognize_file failed: {str(e)}", exc_info=True)
             raise ThirdPartyException(
                 service="ASR",

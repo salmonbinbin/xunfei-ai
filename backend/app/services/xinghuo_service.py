@@ -18,6 +18,7 @@ from wsgiref.handlers import format_date_time
 import ssl
 from app.config import settings
 from app.utils.errors import ThirdPartyException
+from app.services.api_log_service import save_api_log
 
 logger = logging.getLogger("xfyun")
 
@@ -91,6 +92,8 @@ class XingHuoService:
         Returns:
             生成的文本内容
         """
+        import time
+        start_time = time.time()
         self.logger.info(f"[XingHuo] chat_completion called with {len(messages)} messages, model: {self.MODEL}")
 
         try:
@@ -152,18 +155,72 @@ class XingHuoService:
                 )
 
             content = choices[0].get("message", {}).get("content", "")
-            self.logger.info(f"[XingHuo] Chat success, response length: {len(content)}")
+            response_time_ms = int((time.time() - start_time) * 1000)
+            self.logger.info(f"[XingHuo] Chat success, response length: {len(content)}, response_time: {response_time_ms}ms")
+
+            # 记录API调用日志（异步，不阻塞）
+            try:
+                import asyncio
+                asyncio.create_task(save_api_log(
+                    api_name="spark",
+                    call_type="success",
+                    response_time_ms=response_time_ms,
+                    user_id=int(user_id) if user_id.isdigit() else None,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[XingHuo] Failed to save API log: {log_err}")
+
             return content
 
         except ThirdPartyException:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                import asyncio
+                asyncio.create_task(save_api_log(
+                    api_name="spark",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    user_id=int(user_id) if user_id.isdigit() else None,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[XingHuo] Failed to save API log: {log_err}")
             raise
         except httpx.TimeoutException:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                import asyncio
+                asyncio.create_task(save_api_log(
+                    api_name="spark",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    error_code="TIMEOUT",
+                    error_msg="星火大模型请求超时",
+                    user_id=int(user_id) if user_id.isdigit() else None,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[XingHuo] Failed to save API log: {log_err}")
             raise ThirdPartyException(
                 service="XingHuo",
                 message="星火大模型请求超时",
                 original_error=None
             )
         except Exception as e:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                import asyncio
+                asyncio.create_task(save_api_log(
+                    api_name="spark",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    error_msg=str(e)[:200],
+                    user_id=int(user_id) if user_id.isdigit() else None,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[XingHuo] Failed to save API log: {log_err}")
             self.logger.error(f"[XingHuo] Chat failed: {str(e)}", exc_info=True)
             raise ThirdPartyException(
                 service="XingHuo",

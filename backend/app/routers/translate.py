@@ -18,6 +18,7 @@ from app.database import get_db
 from app.models.translation import TranslationTask
 from app.models.user import User
 from app.services.translation_service import translation_service
+from app.services.user_log_service import save_user_log
 from app.utils.errors import handle_app_errors, NotFoundException, ValidationException, UnauthorizedException
 from docx import Document
 

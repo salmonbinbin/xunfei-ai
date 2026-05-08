@@ -4,11 +4,12 @@
 用户登录、注册、JWT Token管理、学生画像
 """
 from datetime import datetime
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 from typing import Optional
 import logging
+import asyncio
 
 from app.database import get_db
 from app.models.user import User, StudentProfile
@@ -24,6 +25,7 @@ from app.schemas.auth import (
 from app.utils.auth import create_access_token, get_current_user, get_password_hash, verify_password
 from app.utils.errors import handle_app_errors, NotFoundException, ValidationException
 from app.config import settings
+from app.services.login_log_service import save_login_log
 
 logger = logging.getLogger("api")
 
@@ -76,6 +78,16 @@ async def login(login_data: LoginRequest, db: AsyncSession = Depends(get_db)):
     access_token = create_access_token(user_id=user.id)
 
     logger.info(f"[Auth] User logged in successfully: id={user.id}")
+
+    # 记录登录日志（异步，不阻塞响应）
+    try:
+        asyncio.create_task(save_login_log(
+            user_id=user.id,
+            user_type="student",
+            login_method="phone"
+        ))
+    except Exception as log_err:
+        logger.warning(f"[Auth] Failed to save login log: {log_err}")
 
     return LoginResponse(
         access_token=access_token,
@@ -130,6 +142,16 @@ async def register(register_data: RegisterRequest, db: AsyncSession = Depends(ge
     access_token = create_access_token(user_id=user.id)
 
     logger.info(f"[Auth] User registered successfully: id={user.id}")
+
+    # 记录登录日志（异步，不阻塞响应）
+    try:
+        asyncio.create_task(save_login_log(
+            user_id=user.id,
+            user_type="student",
+            login_method="phone"
+        ))
+    except Exception as log_err:
+        logger.warning(f"[Auth] Failed to save login log: {log_err}")
 
     return LoginResponse(
         access_token=access_token,

@@ -9,6 +9,7 @@ from sqlalchemy import select, and_, update, delete
 from sqlalchemy.orm import selectinload
 from typing import Optional, List
 import logging
+import asyncio
 from datetime import datetime, date, timedelta
 
 from app.database import get_db
@@ -32,6 +33,7 @@ from app.schemas.timetable import (
 from sqlalchemy.orm import selectinload
 from app.services.xinghuo_service import xinghuo_service
 from app.services.ocr_service import ocr_service
+from app.services.user_log_service import save_user_log
 from app.utils.auth import get_current_user
 from app.utils.errors import handle_app_errors, NotFoundException, ValidationException
 
@@ -385,8 +387,32 @@ async def upload_timetable(
     try:
         parsed_courses = await xinghuo_service.parse_timetable(raw_text)
         logger.info(f"[Timetable] Parsed {len(parsed_courses)} courses")
+
+        # 记录用户操作日志（异步，不阻塞）
+        try:
+            asyncio.create_task(save_user_log(
+                user_id=current_user.id,
+                user_type="student",
+                action="upload_timetable",
+                module="timetable",
+                success=True
+            ))
+        except Exception as log_err:
+            logger.warning(f"[Timetable] Failed to save user log: {log_err}")
+
     except Exception as e:
         logger.error(f"[Timetable] Parse failed: {e}", exc_info=True)
+        try:
+            asyncio.create_task(save_user_log(
+                user_id=current_user.id,
+                user_type="student",
+                action="upload_timetable",
+                module="timetable",
+                success=False,
+                error_msg=str(e)[:200]
+            ))
+        except Exception as log_err:
+            logger.warning(f"[Timetable] Failed to save user log: {log_err}")
         raise ValidationException(
             message=f"课表解析失败: {str(e)}",
             details={"service": "XingHuo"}

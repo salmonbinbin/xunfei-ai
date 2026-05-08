@@ -3,7 +3,7 @@
 """
 from fastapi import APIRouter, Depends, Request, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import func, distinct, and_, select, text
+from sqlalchemy import func, distinct, and_, select, Integer, cast
 from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime, date
@@ -13,7 +13,7 @@ from jose import jwt
 from app.database import get_db
 from app.utils.errors import handle_app_errors
 from app.config import settings
-from app.models import UserLog, LoginLog, ApiLog
+from app.models import UserLog, LoginLog, ApiLog, AdminLog
 
 logger = logging.getLogger("api")
 
@@ -38,6 +38,14 @@ def get_current_admin_id(request: Request) -> int:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="令牌无效或已过期")
 
 
+def _today_range():
+    """返回今天日期范围的datetime对象"""
+    today_date = date.today()
+    start = datetime.combine(today_date, datetime.min.time())
+    end = datetime.combine(today_date, datetime.max.time())
+    return start, end
+
+
 @router.get("/stats")
 @handle_app_errors
 async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_db)):
@@ -45,9 +53,7 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
     admin_id = get_current_admin_id(request)
     logger.info(f"[Dashboard] Get stats, admin_id={admin_id}")
 
-    today = date.today()
-    start_of_day = f"{today} 00:00:00"
-    end_of_day = f"{today} 23:59:59"
+    start_of_day, end_of_day = _today_range()
 
     try:
         # 今日在线人数（去重登录用户）
@@ -81,7 +87,7 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
 
         # API调用总量
         result = await db.execute(
-            select(func.count(ApiLog))
+            select(func.count(ApiLog.id))
             .where(ApiLog.created_at >= start_of_day, ApiLog.created_at <= end_of_day)
         )
         api_calls = result.scalar() or 0
@@ -118,8 +124,8 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
             select(
                 ApiLog.api_name,
                 func.count(ApiLog.id).label("count"),
-                func.sum(func.cast(ApiLog.call_type == "fail", Integer)).label("fail_count"),
-                func.round(func.sum(func.cast(ApiLog.call_type == "fail", Integer)) / func.count(ApiLog.id) * 100, 2).label("fail_rate")
+                func.sum(cast((ApiLog.call_type == "fail"), Integer)).label("fail_count"),
+                func.round(func.sum(cast((ApiLog.call_type == "fail"), Integer)) / func.count(ApiLog.id) * 100, 2).label("fail_rate")
             )
             .where(ApiLog.created_at >= start_of_day, ApiLog.created_at <= end_of_day)
             .group_by(ApiLog.api_name)
@@ -138,11 +144,29 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
                 "api_name": row.api_name,
                 "name": api_name_map.get(row.api_name, row.api_name),
                 "count": row.count,
-                "fail_count": row.fail_count,
-                "fail_rate": row.fail_rate
+                "fail_count": row.fail_count or 0,
+                "fail_rate": float(row.fail_rate) if row.fail_rate else 0.0
             })
 
         logger.info(f"[Dashboard] Stats fetched: online={online_users}, api_calls={api_calls}")
+
+        # 记录管理端操作日志（异步，不阻塞）
+        try:
+            from app.services.admin_log_service import save_admin_log
+            import asyncio
+            asyncio.create_task(save_admin_log(
+                admin_id=admin_id,
+                admin_name="管理员",
+                action="dashboard.view",
+                action_text="查看数据看板",
+                detail={"stats": {
+                    "online_users": online_users,
+                    "api_calls": api_calls
+                }},
+                ip_address=request.client.host if request.client else None
+            ))
+        except Exception as log_err:
+            logger.warning(f"[Dashboard] Failed to save admin log: {log_err}")
 
         return {
             "success": True,
@@ -153,7 +177,7 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
                 "today_api_calls": api_calls,
                 "module_ranking": module_ranking,
                 "api_stats": api_stats,
-                "date": today.isoformat()
+                "date": date.today().isoformat()
             }
         }
 
@@ -175,33 +199,45 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
 
 @router.get("/trend")
 @handle_app_errors
-async def get_hourly_trend(request: Request, date: Optional[str] = None, db: AsyncSession = Depends(get_db)):
+async def get_hourly_trend(request: Request, query_date: Optional[str] = None, db: AsyncSession = Depends(get_db)):
     """获取小时趋势数据"""
     admin_id = get_current_admin_id(request)
-    target_date = date or date.today().isoformat()
-    logger.info(f"[Dashboard] Get trend for {target_date}, admin_id={admin_id}")
+    target_date_str = query_date if query_date is not None else date.today().isoformat()
+    logger.info(f"[Dashboard] Get trend for {target_date_str}, admin_id={admin_id}")
 
     try:
+        # Parse the date string to a date object
+        date_obj = datetime.strptime(target_date_str, "%Y-%m-%d").date()
+
+        # Create start and end datetime for the target date
+        start_datetime = datetime.combine(date_obj, datetime.min.time())
+        end_datetime = datetime.combine(date_obj, datetime.max.time())
+
         result = await db.execute(
             select(
-                text("HOUR(created_at) as hour"),
-                func.count(text("DISTINCT user_id")).label("user_count")
+                func.extract("hour", LoginLog.created_at).label("hour"),
+                func.count(distinct(LoginLog.user_id)).label("user_count")
             )
-            .where(text(f"DATE(created_at) = '{target_date}'"))
-            .group_by(text("HOUR(created_at)"))
-            .order_by(text("HOUR(created_at)"))
+            .where(
+                and_(
+                    LoginLog.created_at >= start_datetime,
+                    LoginLog.created_at <= end_datetime
+                )
+            )
+            .group_by(func.extract("hour", LoginLog.created_at))
+            .order_by(func.extract("hour", LoginLog.created_at))
         )
         hours = []
         for row in result.fetchall():
             hours.append({
-                "hour": row.hour,
+                "hour": int(row.hour),
                 "user_count": row.user_count
             })
 
         return {
             "success": True,
             "data": {
-                "date": target_date,
+                "date": target_date_str,
                 "hours": hours
             }
         }
@@ -211,7 +247,7 @@ async def get_hourly_trend(request: Request, date: Optional[str] = None, db: Asy
         return {
             "success": True,
             "data": {
-                "date": target_date,
+                "date": target_date_str,
                 "hours": hours
             }
         }

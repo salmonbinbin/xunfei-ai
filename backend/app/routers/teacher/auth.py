@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
 import logging
+import asyncio
 
 from app.database import get_db
 from app.models.user import User, UserRole
@@ -20,6 +21,7 @@ from app.schemas.teacher import (
 )
 from app.utils.auth import create_access_token, get_current_teacher, get_password_hash, verify_password
 from app.utils.errors import handle_app_errors, ValidationException
+from app.services.login_log_service import save_login_log
 
 logger = logging.getLogger("teacher-auth")
 
@@ -94,6 +96,16 @@ async def register(register_data: TeacherRegisterRequest, db: AsyncSession = Dep
         logger.info(f"[TeacherAuth] Token generated successfully")
 
         logger.info(f"[TeacherAuth] Teacher registered successfully: id={user.id}, phone={register_data.phone}")
+
+        # 记录登录日志（异步，不阻塞响应）
+        try:
+            asyncio.create_task(save_login_log(
+                user_id=user.id,
+                user_type="teacher",
+                login_method="phone"
+            ))
+        except Exception as log_err:
+            logger.warning(f"[TeacherAuth] Failed to save login log: {log_err}")
 
         return {
             "success": True,
@@ -175,6 +187,16 @@ async def login(login_data: TeacherLoginRequest, db: AsyncSession = Depends(get_
     access_token = create_access_token(user_id=user.id, role="teacher")
 
     logger.info(f"[TeacherAuth] Teacher logged in successfully: id={user.id}, phone={login_data.phone}")
+
+    # 记录登录日志（异步，不阻塞响应）
+    try:
+        asyncio.create_task(save_login_log(
+            user_id=user.id,
+            user_type="teacher",
+            login_method="phone"
+        ))
+    except Exception as log_err:
+        logger.warning(f"[TeacherAuth] Failed to save login log: {log_err}")
 
     return {
         "success": True,

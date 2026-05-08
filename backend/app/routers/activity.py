@@ -19,6 +19,7 @@ from app.schemas.activity import (
 )
 from app.services.feishu_service import feishu_service
 from app.services.xinghuo_service import xinghuo_service
+from app.services.user_log_service import save_user_log
 from app.utils.auth import get_current_user
 from app.utils.errors import handle_app_errors, ValidationException
 from app.config import settings
@@ -109,6 +110,19 @@ async def generate_activity_plan(
 
     logger.info(f"[Activity] Plan generated for user {current_user.id}, length: {len(plan)}")
 
+    # 记录用户操作日志（异步，不阻塞）
+    try:
+        import asyncio
+        asyncio.create_task(save_user_log(
+            user_id=current_user.id,
+            user_type="student",
+            action="activity_plan",
+            module="activity",
+            success=True
+        ))
+    except Exception as log_err:
+        logger.warning(f"[Activity] Failed to save user log: {log_err}")
+
     return GeneratePlanResponse(
         success=True,
         plan=plan,
@@ -183,6 +197,19 @@ async def generate_promotional_copy(
     )
 
     logger.info(f"[Activity] Copy generated for user {current_user.id}, length: {len(copy)}")
+
+    # 记录用户操作日志（异步，不阻塞）
+    try:
+        import asyncio
+        asyncio.create_task(save_user_log(
+            user_id=current_user.id,
+            user_type="student",
+            action="activity_copy",
+            module="activity",
+            success=True
+        ))
+    except Exception as log_err:
+        logger.warning(f"[Activity] Failed to save user log: {log_err}")
 
     return GenerateCopyResponse(
         success=True,

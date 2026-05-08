@@ -23,6 +23,7 @@ import websocket
 
 from app.config import settings
 from app.utils.errors import ThirdPartyException
+from app.services.api_log_service import save_api_log
 
 logger = logging.getLogger("xfyun")
 
@@ -227,6 +228,8 @@ class TTSService:
         Returns:
             音频文件URL
         """
+        import time
+        start_time = time.time()
         self.logger.info(f"[TTS] synthesize_to_url called, text length: {len(text)}")
 
         try:
@@ -256,11 +259,34 @@ class TTSService:
 
             # 返回URL (相对路径)
             audio_url = f"/uploads/tts/{filename}"
-            self.logger.info(f"[TTS] Audio saved to: {file_path}, URL: {audio_url}")
+            response_time_ms = int((time.time() - start_time) * 1000)
+            self.logger.info(f"[TTS] Audio saved to: {file_path}, URL: {audio_url}, response_time: {response_time_ms}ms")
+
+            # 记录API调用日志（异步，不阻塞）
+            try:
+                asyncio.create_task(save_api_log(
+                    api_name="tts",
+                    call_type="success",
+                    response_time_ms=response_time_ms,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[TTS] Failed to save API log: {log_err}")
 
             return audio_url
 
         except Exception as e:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                asyncio.create_task(save_api_log(
+                    api_name="tts",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    error_msg=str(e)[:200],
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[TTS] Failed to save API log: {log_err}")
             self.logger.error(f"[TTS] synthesize_to_url failed: {str(e)}", exc_info=True)
             raise
 

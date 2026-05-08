@@ -33,6 +33,7 @@ from app.services.knowledge_base import knowledge_base
 from app.services.nlp_service import nlp_service
 from app.services.asr_service import asr_service
 from app.services.tts_service import tts_service
+from app.services.user_log_service import save_user_log
 
 logger = logging.getLogger("api")
 
@@ -364,6 +365,19 @@ async def chat_message(
 
         logger.info(f"[Chat] Chat completed: conv_id={conv_id}, latency={latency_ms}ms")
 
+        # 8. 记录用户操作日志（异步，不阻塞）
+        try:
+            asyncio.create_task(save_user_log(
+                user_id=current_user.id,
+                user_type="student",
+                action="ai_chat",
+                module="ai_sister",
+                duration_ms=latency_ms,
+                success=True
+            ))
+        except Exception as log_err:
+            logger.warning(f"[Chat] Failed to save user log: {log_err}")
+
         return ChatResponse(
             conv_id=conv_id,
             message_id=assistant_message.id,
@@ -663,8 +677,32 @@ async def chat_voice(
         asr_result = await asr_service.recognize_file(temp_audio_path)
         recognized_text = asr_result.get("text", "")
         logger.info(f"[Chat] ASR recognized: {recognized_text[:100]}...")
+
+        # 记录用户操作日志（异步，不阻塞）
+        try:
+            asyncio.create_task(save_user_log(
+                user_id=current_user.id,
+                user_type="student",
+                action="voice_input",
+                module="ai_sister",
+                success=True
+            ))
+        except Exception as log_err:
+            logger.warning(f"[Chat] Failed to save user log: {log_err}")
+
     except Exception as e:
         logger.error(f"[Chat] ASR failed: {e}", exc_info=True)
+        try:
+            asyncio.create_task(save_user_log(
+                user_id=current_user.id,
+                user_type="student",
+                action="voice_input",
+                module="ai_sister",
+                success=False,
+                error_msg=str(e)[:200]
+            ))
+        except Exception as log_err:
+            logger.warning(f"[Chat] Failed to save user log: {log_err}")
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"语音识别失败: {str(e)}"
@@ -719,6 +757,18 @@ async def chat_tts(
             voice=voice
         )
         logger.info(f"[Chat] TTS generated: {audio_url}")
+
+        # 记录用户操作日志（异步，不阻塞）
+        try:
+            asyncio.create_task(save_user_log(
+                user_id=current_user.id,
+                user_type="student",
+                action="voice_output",
+                module="ai_sister",
+                success=True
+            ))
+        except Exception as log_err:
+            logger.warning(f"[Chat] Failed to save user log: {log_err}")
         return {
             "success": True,
             "data": {

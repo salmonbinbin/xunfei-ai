@@ -27,6 +27,7 @@ from app.schemas.review import (
 )
 from app.services.asr_service import asr_service
 from app.services.xinghuo_service import xinghuo_service
+from app.services.user_log_service import save_user_log
 from app.utils.auth import get_current_user
 from app.utils.errors import handle_app_errors, NotFoundException, ValidationException
 from app.config import settings
@@ -107,6 +108,18 @@ async def upload_audio(
 
     # 异步触发转写和总结
     asyncio.create_task(process_review_async(record.id, str(file_path), language, db))
+
+    # 记录用户操作日志（异步，不阻塞）
+    try:
+        asyncio.create_task(save_user_log(
+            user_id=current_user.id,
+            user_type="student",
+            action="upload_audio",
+            module="review",
+            success=True
+        ))
+    except Exception as log_err:
+        logger.warning(f"[Review] Failed to save user log: {log_err}")
 
     return ReviewUploadResponse(
         success=True,

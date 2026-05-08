@@ -15,6 +15,7 @@ import httpx
 import logging
 from app.config import settings
 from app.utils.errors import ThirdPartyException
+from app.services.api_log_service import save_api_log
 
 logger = logging.getLogger("xfyun")
 
@@ -84,6 +85,8 @@ class OCRService:
         Returns:
             识别结果，包含 text 字段
         """
+        import time
+        start_time = time.time()
         self.logger.info(f"[OCR] recognize_document called, image size: {len(image_data)} bytes")
 
         try:
@@ -169,7 +172,20 @@ class OCRService:
             else:
                 text = ""
 
-            self.logger.info(f"[OCR] Recognition success, text length: {len(text)}")
+            response_time_ms = int((time.time() - start_time) * 1000)
+            self.logger.info(f"[OCR] Recognition success, text length: {len(text)}, response_time: {response_time_ms}ms")
+
+            # 记录API调用日志（异步，不阻塞）
+            try:
+                import asyncio
+                asyncio.create_task(save_api_log(
+                    api_name="ocr",
+                    call_type="success",
+                    response_time_ms=response_time_ms,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[OCR] Failed to save API log: {log_err}")
 
             return {
                 "text": text,
@@ -177,14 +193,50 @@ class OCRService:
             }
 
         except ThirdPartyException:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                import asyncio
+                asyncio.create_task(save_api_log(
+                    api_name="ocr",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[OCR] Failed to save API log: {log_err}")
             raise
         except httpx.TimeoutException:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                import asyncio
+                asyncio.create_task(save_api_log(
+                    api_name="ocr",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    error_code="TIMEOUT",
+                    error_msg="OCR识别超时",
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[OCR] Failed to save API log: {log_err}")
             raise ThirdPartyException(
                 service="OCR",
                 message="OCR识别超时，请重试",
                 original_error=None
             )
         except Exception as e:
+            response_time_ms = int((time.time() - start_time) * 1000)
+            try:
+                import asyncio
+                asyncio.create_task(save_api_log(
+                    api_name="ocr",
+                    call_type="fail",
+                    response_time_ms=response_time_ms,
+                    error_msg=str(e)[:200],
+                    user_type="student"
+                ))
+            except Exception as log_err:
+                self.logger.warning(f"[OCR] Failed to save API log: {log_err}")
             self.logger.error(f"[OCR] Recognition failed: {str(e)}", exc_info=True)
             raise ThirdPartyException(
                 service="OCR",
