@@ -50,6 +50,6 @@ export function deleteGradeRecord(recordId) {
  */
 export function exportGradeExcel(recordId) {
   return api.get(`/teacher/grade/records/${recordId}/export`, {
-    responseType: 'blob'
+    responseType: 'arraybuffer'
   })
 }

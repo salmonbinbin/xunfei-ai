@@ -8,7 +8,7 @@ from typing import Optional
 from fastapi import APIRouter, Depends, UploadFile, File, Form, Query, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, desc
+from sqlalchemy import select, func, desc, asc
 from sqlalchemy.orm import selectinload
 
 from app.database import get_db
@@ -477,13 +477,17 @@ async def delete_grade_record(
 @handle_app_errors
 async def export_grade(
     record_id: int,
+    sort_by: Optional[str] = Query(None, description="排序字段 (total_score, usual_score, midterm_score, final_score, practice_score, student_name, rank)"),
+    sort_order: Optional[str] = Query("descending", description="排序顺序 (ascending, descending)"),
     current_user: User = Depends(get_current_teacher),
     db: AsyncSession = Depends(get_db)
 ):
     """
     导出成绩Excel
+
+    支持自定义排序，默认按排名导出
     """
-    logger.info(f"[Grade] Export by teacher {current_user.id}, record_id={record_id}")
+    logger.info(f"[Grade] Export by teacher {current_user.id}, record_id={record_id}, sort_by={sort_by}, sort_order={sort_order}")
 
     # 查询记录
     query = select(GradeRecord).where(
@@ -497,12 +501,32 @@ async def export_grade(
     if not record:
         raise HTTPException(status_code=404, detail="成绩记录不存在")
 
+    # 排序字段映射
+    sort_field_mapping = {
+        "total_score": GradeItem.total_score,
+        "usual_score": GradeItem.usual_score,
+        "midterm_score": GradeItem.midterm_score,
+        "final_score": GradeItem.final_score,
+        "practice_score": GradeItem.practice_score,
+        "student_name": GradeItem.student_name,
+        "rank": GradeItem.ranking,
+    }
+
+    # 构建排序
+    order_column = GradeItem.ranking  # 默认排序
+    if sort_by and sort_by in sort_field_mapping:
+        order_column = sort_field_mapping[sort_by]
+        if sort_order == "ascending":
+            order_column = asc(order_column)
+        else:
+            order_column = desc(order_column)
+
     # 查询明细
     items_query = (
         select(GradeItem)
         .where(GradeItem.record_id == record_id)
         .where(GradeItem.is_deleted == False)
-        .order_by(GradeItem.ranking)
+        .order_by(order_column)
     )
     items_result = await db.execute(items_query)
     items = items_result.scalars().all()

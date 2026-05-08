@@ -25,6 +25,7 @@ aiofiles>=23.0.0
 # 文档生成
 python-docx>=0.8.0
 python-pptx>=0.6.0
+openpyxl>=3.1.0
 
 # 向量数据库
 chromadb>=0.4.0

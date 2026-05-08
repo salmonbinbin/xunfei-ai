@@ -181,11 +181,13 @@
         </template>
 
         <el-table
+          ref="tableRef"
           :data="items"
           stripe
           border
           style="width: 100%"
           :default-sort="{ prop: 'rank', order: 'ascending' }"
+          @sort-change="handleSortChange"
         >
           <el-table-column prop="rank" label="排名" width="80" sortable />
           <el-table-column prop="student_name" label="学生姓名" min-width="100" />
@@ -248,6 +250,15 @@ const radarChartRef = ref(null)
 const searchedStudentChartRef = ref(null)
 const charts = ref([])
 
+// 表格ref和排序状态
+const tableRef = ref(null)
+const tableSort = ref({ prop: 'rank', order: 'ascending' })
+
+// 排序变化处理
+function handleSortChange({ prop, order }) {
+  tableSort.value = { prop: prop || 'rank', order: order || 'ascending' }
+}
+
 // 计算属性
 const courseName = computed(() => record.value?.course_name || '成绩详情')
 const showRadar = computed(() => items.value.length > 0 && items.value.length <= 50)
@@ -299,23 +310,48 @@ async function refreshReport() {
 async function handleExport() {
   try {
     const recordId = route.params.id
-    const res = await exportGradeExcel(recordId)
+    const token = localStorage.getItem('token')
 
-    // 创建下载
-    const blob = new Blob([res], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    // 构建带排序参数的URL
+    const sortBy = tableSort.value.prop === 'rank' ? 'rank' : tableSort.value.prop
+    const sortOrder = tableSort.value.order === 'ascending' ? 'ascending' : 'descending'
+    const exportUrl = `/api/teacher/grade/records/${recordId}/export?sort_by=${sortBy}&sort_order=${sortOrder}`
+
+    // 直接使用fetch下载，避免axios处理blob的问题
+    const response = await fetch(exportUrl, {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
     })
-    const url = window.URL.createObjectURL(blob)
-    const link = document.createElement('a')
-    link.href = url
-    link.download = `${courseName.value}_成绩单.xlsx`
-    link.click()
-    window.URL.revokeObjectURL(url)
 
-    ElMessage.success('导出成功')
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      if (errorData.error?.message) {
+        ElMessage.error(errorData.error.message)
+      } else if (errorData.detail) {
+        ElMessage.error(errorData.detail)
+      } else {
+        ElMessage.error(`导出失败：${response.status}`)
+      }
+      return
+    }
+
+    const blob = await response.blob()
+
+    if (blob.size > 0) {
+      const url = window.URL.createObjectURL(blob)
+      const link = document.createElement('a')
+      link.href = url
+      link.download = `${courseName.value}_成绩单.xlsx`
+      link.click()
+      window.URL.revokeObjectURL(url)
+      ElMessage.success('导出成功')
+    } else {
+      ElMessage.error('导出失败：文件为空')
+    }
   } catch (error) {
     console.error('Export error:', error)
-    ElMessage.error('导出失败')
+    ElMessage.error('导出失败，请检查网络')
   }
 }
 
