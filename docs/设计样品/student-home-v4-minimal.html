@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学生首页 - 简约卡片风格</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0891B2;
+      --primary-light: #22D3EE;
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-warm: #F1F5F9;
+      --text-primary: #1E293B;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 24px 80px;
+    }
+
+    /* 头部 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .user-block {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .user-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      font-weight: 700;
+    }
+
+    .user-text .greeting {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .user-text .name {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .header-info {
+      text-align: right;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* 今日课程 - 大卡片突出 */
+    .today-card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 20px;
+      border: 1px solid var(--border);
+    }
+
+    .today-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .today-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .today-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .today-icon svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .today-title-text {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .today-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* 课程列表 */
+    .course-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .course-item {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      padding: 14px 16px;
+      background: var(--bg-warm);
+      border-radius: 14px;
+      transition: all 0.2s;
+      cursor: pointer;
+    }
+
+    .course-item:hover {
+      background: rgba(8, 145, 178, 0.06);
+    }
+
+    .course-time-badge {
+      padding: 6px 10px;
+      background: var(--bg-card);
+      border-radius: 8px;
+      text-align: center;
+      min-width: 60px;
+    }
+
+    .course-time-badge .time {
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .course-time-badge .slot {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    .course-content {
+      flex: 1;
+    }
+
+    .course-name {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 3px;
+    }
+
+    .course-location {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .course-arrow {
+      color: var(--text-muted);
+    }
+
+    .course-arrow svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* 快捷服务 */
+    .quick-section {
+      margin-bottom: 20px;
+    }
+
+    .quick-header {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 10px;
+    }
+
+    .quick-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-item:hover {
+      border-color: var(--primary);
+      transform: translateY(-1px);
+    }
+
+    .quick-icon {
+      width: 38px;
+      height: 38px;
+      margin: 0 auto 8px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    .quick-item:nth-child(1) .quick-icon { background: rgba(8, 145, 178, 0.1); }
+    .quick-item:nth-child(1) .quick-icon svg { color: var(--primary); }
+    .quick-item:nth-child(2) .quick-icon { background: rgba(5, 150, 105, 0.1); }
+    .quick-item:nth-child(2) .quick-icon svg { color: #059669; }
+    .quick-item:nth-child(3) .quick-icon { background: rgba(139, 92, 246, 0.1); }
+    .quick-item:nth-child(3) .quick-icon svg { color: #8B5CF6; }
+    .quick-item:nth-child(4) .quick-icon { background: rgba(245, 158, 11, 0.1); }
+    .quick-item:nth-child(4) .quick-icon svg { color: #F59E0B; }
+    .quick-item:nth-child(5) .quick-icon { background: rgba(8, 145, 178, 0.1); }
+    .quick-item:nth-child(5) .quick-icon svg { color: var(--primary); }
+    .quick-item:nth-child(6) .quick-icon { background: rgba(236, 72, 153, 0.1); }
+    .quick-item:nth-child(6) .quick-icon svg { color: #EC4899; }
+    .quick-item:nth-child(7) .quick-icon { background: rgba(14, 116, 144, 0.1); }
+    .quick-item:nth-child(7) .quick-icon svg { color: #0E7490; }
+    .quick-item:nth-child(8) .quick-icon { background: rgba(5, 150, 105, 0.1); }
+    .quick-item:nth-child(8) .quick-icon svg { color: #059669; }
+
+    .quick-name {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    /* AI学姐 */
+    .ai-card {
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.08), rgba(34, 211, 238, 0.04));
+      border: 1px solid rgba(8, 145, 178, 0.15);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .ai-avatar {
+      width: 50px;
+      height: 50px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .ai-text {
+      flex: 1;
+    }
+
+    .ai-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .ai-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .ai-button {
+      padding: 10px 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .ai-button:hover {
+      background: var(--primary-dark, #0E7490);
+    }
+
+    @media (max-width: 640px) {
+      .quick-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- 头部 -->
+    <div class="header">
+      <div class="user-block">
+        <div class="user-avatar">明</div>
+        <div class="user-text">
+          <div class="greeting">下午好</div>
+          <div class="name">小明同学</div>
+        </div>
+      </div>
+      <div class="header-info">
+        5月8日 周五<br/>第12周
+      </div>
+    </div>
+
+    <!-- 今日课程 -->
+    <div class="today-card">
+      <div class="today-header">
+        <div class="today-title">
+          <div class="today-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <span class="today-title-text">今日课程</span>
+        </div>
+        <span class="today-meta">共3节课</span>
+      </div>
+
+      <div class="course-list">
+        <div class="course-item">
+          <div class="course-time-badge">
+            <div class="time">09:00</div>
+            <div class="slot">1-2节</div>
+          </div>
+          <div class="course-content">
+            <div class="course-name">市场营销</div>
+            <div class="course-location">9教301</div>
+          </div>
+          <div class="course-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="course-item">
+          <div class="course-time-badge">
+            <div class="time">10:00</div>
+            <div class="slot">3-4节</div>
+          </div>
+          <div class="course-content">
+            <div class="course-name">消费者行为分析</div>
+            <div class="course-location">9教302</div>
+          </div>
+          <div class="course-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+
+        <div class="course-item">
+          <div class="course-time-badge">
+            <div class="time">14:00</div>
+            <div class="slot">5-6节</div>
+          </div>
+          <div class="course-content">
+            <div class="course-name">管理学原理</div>
+            <div class="course-location">8教201</div>
+          </div>
+          <div class="course-arrow">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <polyline points="9 18 15 12 9 6"/>
+            </svg>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快捷服务 -->
+    <div class="quick-section">
+      <div class="quick-header">快捷服务</div>
+      <div class="quick-grid">
+        <div class="quick-item">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="quick-name">课表</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+          </div>
+          <div class="quick-name">AI学姐</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+              <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+            </svg>
+          </div>
+          <div class="quick-name">录音</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="quick-name">选课</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+          <div class="quick-name">翻译</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </div>
+          <div class="quick-name">活动</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 6v6l4 2"/>
+            </svg>
+          </div>
+          <div class="quick-name">备忘</div>
+        </div>
+        <div class="quick-item">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 19.5A2.5 2.5 0 016.5 17H20"/>
+              <path d="M6.5 2H20v20H6.5A2.5 2.5 0 014 19.5v-15A2.5 2.5 0 016.5 2z"/>
+            </svg>
+          </div>
+          <div class="quick-name">成绩</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI学姐 -->
+    <div class="ai-card">
+      <div class="ai-avatar">AI</div>
+      <div class="ai-text">
+        <div class="ai-title">有问题？问问AI学姐</div>
+        <div class="ai-desc">查课表、问选课、了解校园信息</div>
+      </div>
+      <button class="ai-button">开始对话</button>
+    </div>
+  </div>
+</body>
+</html>

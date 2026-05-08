@@ -1,0 +1,572 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>学生首页 - 时间轴风格</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0891B2;
+      --primary-light: #22D3EE;
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-warm: #F1F5F9;
+      --text-primary: #1E293B;
+      --text-secondary: #64748B;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 24px 24px 80px;
+    }
+
+    /* 头部 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 28px;
+    }
+
+    .greeting-block {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .greeting-avatar {
+      width: 52px;
+      height: 52px;
+      border-radius: 16px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .greeting-text .greeting {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .greeting-text .name {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .header-date {
+      text-align: right;
+    }
+
+    .header-date .date {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .header-date .weekday {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    /* 全宽时间轴课程 */
+    .today-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+
+    .today-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .today-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .today-title-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(8, 145, 178, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .today-title-icon svg {
+      width: 20px;
+      height: 20px;
+      color: var(--primary);
+    }
+
+    .today-title-text {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .today-link {
+      font-size: 13px;
+      color: var(--primary);
+      text-decoration: none;
+    }
+
+    .today-link:hover {
+      text-decoration: underline;
+    }
+
+    /* 课程时间轴 */
+    .timeline {
+      position: relative;
+    }
+
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 16px;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), var(--primary-light), #8B5CF6, #059669);
+      border-radius: 2px;
+    }
+
+    .course-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 20px;
+      padding: 16px 0;
+      position: relative;
+    }
+
+    .course-item:not(:last-child) {
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .time-block {
+      width: 70px;
+      flex-shrink: 0;
+      text-align: right;
+      padding-top: 2px;
+    }
+
+    .time-start {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .time-slot {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .timeline-dot {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 1;
+    }
+
+    .course-item:nth-child(1) .timeline-dot { background: var(--primary); }
+    .course-item:nth-child(2) .timeline-dot { background: #8B5CF6; }
+    .course-item:nth-child(3) .timeline-dot { background: #059669; }
+
+    .timeline-dot svg {
+      width: 18px;
+      height: 18px;
+      color: white;
+    }
+
+    .course-info {
+      flex: 1;
+      background: var(--bg-warm);
+      border-radius: 14px;
+      padding: 16px 20px;
+    }
+
+    .course-name {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .course-meta {
+      display: flex;
+      gap: 16px;
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .course-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .course-meta-item svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    .no-course {
+      text-align: center;
+      padding: 40px;
+      color: var(--text-muted);
+    }
+
+    /* 快捷服务 - 横向滚动 */
+    .quick-section {
+      margin-bottom: 24px;
+    }
+
+    .quick-header {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 14px;
+    }
+
+    .quick-scroll {
+      display: flex;
+      gap: 12px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+    }
+
+    .quick-card {
+      min-width: 140px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 18px 16px;
+      text-align: center;
+      flex-shrink: 0;
+      cursor: pointer;
+      transition: all 0.25s;
+    }
+
+    .quick-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(8, 145, 178, 0.1);
+    }
+
+    .quick-icon {
+      width: 40px;
+      height: 40px;
+      margin: 0 auto 10px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .quick-card:nth-child(1) .quick-icon { background: rgba(8, 145, 178, 0.1); }
+    .quick-card:nth-child(1) .quick-icon svg { color: var(--primary); }
+    .quick-card:nth-child(2) .quick-icon { background: rgba(5, 150, 105, 0.1); }
+    .quick-card:nth-child(2) .quick-icon svg { color: #059669; }
+    .quick-card:nth-child(3) .quick-icon { background: rgba(139, 92, 246, 0.1); }
+    .quick-card:nth-child(3) .quick-icon svg { color: #8B5CF6; }
+    .quick-card:nth-child(4) .quick-icon { background: rgba(245, 158, 11, 0.1); }
+    .quick-card:nth-child(4) .quick-icon svg { color: #F59E0B; }
+    .quick-card:nth-child(5) .quick-icon { background: rgba(8, 145, 178, 0.1); }
+    .quick-card:nth-child(5) .quick-icon svg { color: var(--primary); }
+    .quick-card:nth-child(6) .quick-icon { background: rgba(236, 72, 153, 0.1); }
+    .quick-card:nth-child(6) .quick-icon svg { color: #EC4899; }
+
+    .quick-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* AI学姐 */
+    .ai-card {
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.06), rgba(34, 211, 238, 0.03));
+      border: 1px solid rgba(8, 145, 178, 0.12);
+      border-radius: 20px;
+      padding: 20px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .ai-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 18px;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+
+    .ai-info {
+      flex: 1;
+    }
+
+    .ai-title {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .ai-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .ai-btn {
+      padding: 10px 18px;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- 头部 -->
+    <div class="header">
+      <div class="greeting-block">
+        <div class="greeting-avatar">明</div>
+        <div class="greeting-text">
+          <div class="greeting">下午好</div>
+          <div class="name">小明同学</div>
+        </div>
+      </div>
+      <div class="header-date">
+        <div class="date">5月8日</div>
+        <div class="weekday">周五 · 第12周</div>
+      </div>
+    </div>
+
+    <!-- 今日课程 -->
+    <div class="today-section">
+      <div class="today-header">
+        <div class="today-title">
+          <div class="today-title-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <span class="today-title-text">今日课程</span>
+        </div>
+        <a href="#" class="today-link">查看全部 →</a>
+      </div>
+
+      <div class="timeline">
+        <div class="course-item">
+          <div class="time-block">
+            <div class="time-start">09:00</div>
+            <div class="time-slot">1-2节</div>
+          </div>
+          <div class="timeline-dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="course-info">
+            <div class="course-name">市场营销</div>
+            <div class="course-meta">
+              <span class="course-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                9教301
+              </span>
+              <span class="course-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+                2学时
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="course-item">
+          <div class="time-block">
+            <div class="time-start">10:00</div>
+            <div class="time-slot">3-4节</div>
+          </div>
+          <div class="timeline-dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"/>
+            </svg>
+          </div>
+          <div class="course-info">
+            <div class="course-name">消费者行为分析</div>
+            <div class="course-meta">
+              <span class="course-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                9教302
+              </span>
+              <span class="course-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+                2学时
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="course-item">
+          <div class="time-block">
+            <div class="time-start">14:00</div>
+            <div class="time-slot">5-6节</div>
+          </div>
+          <div class="timeline-dot">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="course-info">
+            <div class="course-name">管理学原理</div>
+            <div class="course-meta">
+              <span class="course-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0118 0z"/>
+                  <circle cx="12" cy="10" r="3"/>
+                </svg>
+                8教201
+              </span>
+              <span class="course-meta-item">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"/>
+                  <path d="M12 6v6l4 2"/>
+                </svg>
+                2学时
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 快捷服务 -->
+    <div class="quick-section">
+      <div class="quick-header">快捷服务</div>
+      <div class="quick-scroll">
+        <div class="quick-card">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <rect x="3" y="4" width="18" height="18" rx="2"/>
+              <line x1="3" y1="10" x2="21" y2="10"/>
+            </svg>
+          </div>
+          <div class="quick-name">课表管理</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/>
+            </svg>
+          </div>
+          <div class="quick-name">AI学姐</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 00-3 3v8a3 3 0 006 0V4a3 3 0 00-3-3z"/>
+              <path d="M19 10v2a7 7 0 01-14 0v-2"/>
+            </svg>
+          </div>
+          <div class="quick-name">录音回顾</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M22 11.08V12a10 10 0 11-5.93-9.14"/>
+              <polyline points="22 4 12 14.01 9 11.01"/>
+            </svg>
+          </div>
+          <div class="quick-name">选课助手</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </div>
+          <div class="quick-name">智能翻译</div>
+        </div>
+        <div class="quick-card">
+          <div class="quick-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"/>
+            </svg>
+          </div>
+          <div class="quick-name">活动助手</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI学姐 -->
+    <div class="ai-card">
+      <div class="ai-avatar">AI</div>
+      <div class="ai-info">
+        <div class="ai-title">有问题？问问AI学姐</div>
+        <div class="ai-desc">查课表、问选课、了解校园信息...</div>
+      </div>
+      <button class="ai-btn">开始对话</button>
+    </div>
+  </div>
+</body>
+</html>
