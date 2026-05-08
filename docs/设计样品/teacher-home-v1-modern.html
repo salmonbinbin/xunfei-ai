@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI小商教师端 - 现代精致风格</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0891B2;
+      --primary-light: #22D3EE;
+      --primary-dark: #0E7490;
+      --accent-purple: #8B5CF6;
+      --accent-green: #059669;
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --text-primary: #1E293B;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    .page {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 60px 40px 120px;
+    }
+
+    /* 顶部欢迎区 */
+    .header {
+      margin-bottom: 56px;
+    }
+
+    .greeting {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--primary);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+    }
+
+    .title {
+      font-size: 36px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.2;
+      margin-bottom: 16px;
+    }
+
+    .subtitle {
+      font-size: 16px;
+      color: var(--text-secondary);
+      max-width: 480px;
+      line-height: 1.6;
+    }
+
+    /* 统计数据条 */
+    .stats-bar {
+      display: flex;
+      gap: 48px;
+      margin-bottom: 56px;
+      padding-bottom: 40px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      font-variant-numeric: tabular-nums;
+    }
+
+    .stat-label {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* 功能卡片网格 */
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+      margin-bottom: 48px;
+    }
+
+    .feature-card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 32px;
+      position: relative;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+      border: 1px solid transparent;
+    }
+
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .feature-card:hover::before {
+      opacity: 1;
+    }
+
+    .card-grade::before { background: linear-gradient(90deg, var(--primary), var(--primary-light)); }
+    .card-notification::before { background: linear-gradient(90deg, var(--accent-purple), #A78BFA); }
+    .card-lesson::before { background: linear-gradient(90deg, var(--accent-green), #34D399); }
+
+    .feature-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+      border-color: var(--border);
+    }
+
+    /* 卡片图标区 */
+    .card-visual {
+      width: 64px;
+      height: 64px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 24px;
+      position: relative;
+    }
+
+    .card-grade .card-visual {
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.12), rgba(34, 211, 238, 0.08));
+    }
+
+    .card-notification .card-visual {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.12), rgba(167, 139, 250, 0.08));
+    }
+
+    .card-lesson .card-visual {
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.12), rgba(52, 211, 153, 0.08));
+    }
+
+    .card-visual svg {
+      width: 28px;
+      height: 28px;
+    }
+
+    .card-grade .card-visual svg { color: var(--primary); }
+    .card-notification .card-visual svg { color: var(--accent-purple); }
+    .card-lesson .card-visual svg { color: var(--accent-green); }
+
+    /* 卡片内容 */
+    .card-title {
+      font-size: 20px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: var(--text-muted);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+
+    .card-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .tag {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bg-page);
+      color: var(--text-secondary);
+    }
+
+    /* 箭头指示 */
+    .card-arrow {
+      position: absolute;
+      right: 32px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: var(--bg-page);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+
+    .feature-card:hover .card-arrow {
+      opacity: 1;
+      transform: translateY(-50%) translateX(4px);
+    }
+
+    .card-arrow svg {
+      width: 16px;
+      height: 16px;
+      color: var(--text-muted);
+    }
+
+    /* 底部提示区 */
+    .footer-tip {
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.04), rgba(34, 211, 238, 0.02));
+      border: 1px solid rgba(8, 145, 178, 0.1);
+      border-radius: 16px;
+      padding: 24px 32px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .tip-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .tip-icon svg {
+      width: 22px;
+      height: 22px;
+      color: white;
+    }
+
+    .tip-content h4 {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .tip-content p {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* 响应式 */
+    @media (max-width: 900px) {
+      .cards-grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-bar {
+        flex-wrap: wrap;
+        gap: 32px;
+      }
+      .page {
+        padding: 40px 24px 100px;
+      }
+      .title {
+        font-size: 28px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- 头部欢迎区 -->
+    <header class="header">
+      <p class="greeting">AI小商 · 教师端</p>
+      <h1 class="title">欢迎回来，张老师<br>让教学更智能</h1>
+      <p class="subtitle">选择下方功能模块，开启您的智能教学之旅。AI将协助您完成成绩分析、通知发布、教案生成等工作。</p>
+    </header>
+
+    <!-- 统计数据条 -->
+    <div class="stats-bar">
+      <div class="stat-item">
+        <span class="stat-value">12</span>
+        <span class="stat-label">本学期课程</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">386</span>
+        <span class="stat-label">学生总数</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value">5</span>
+        <span class="stat-label">待发布通知</span>
+      </div>
+    </div>
+
+    <!-- 功能卡片 -->
+    <div class="cards-grid">
+      <!-- 成绩管理 -->
+      <div class="feature-card card-grade">
+        <div class="card-visual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <h3 class="card-title">成绩管理</h3>
+        <p class="card-desc">上传Excel成绩表，AI智能分析成绩分布、生成统计图表、导出分析报告</p>
+        <div class="card-tags">
+          <span class="tag">智能分析</span>
+          <span class="tag">可视化图表</span>
+          <span class="tag">一键导出</span>
+        </div>
+        <div class="card-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 通知发布 -->
+      <div class="feature-card card-notification">
+        <div class="card-visual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <h3 class="card-title">通知发布</h3>
+        <p class="card-desc">输入通知主题，AI生成格式规范的通知文档，支持一键发送到飞书群</p>
+        <div class="card-tags">
+          <span class="tag">AI生成</span>
+          <span class="tag">格式规范</span>
+          <span class="tag">飞书推送</span>
+        </div>
+        <div class="card-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- 备课教案 -->
+      <div class="feature-card card-lesson">
+        <div class="card-visual">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <h3 class="card-title">备课教案</h3>
+        <p class="card-desc">输入知识点描述，AI生成结构化教学大纲和PPT演示文稿</p>
+        <div class="card-tags">
+          <span class="tag">AI大纲</span>
+          <span class="tag">PPT生成</span>
+          <span class="tag">教学建议</span>
+        </div>
+        <div class="card-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部提示 -->
+    <div class="footer-tip">
+      <div class="tip-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"/>
+          <path d="M12 16v-4m0-4h.01"/>
+        </svg>
+      </div>
+      <div class="tip-content">
+        <h4>使用提示</h4>
+        <p>所有AI生成内容仅供辅助参考，生成后请仔细审核确认无误后再使用。</p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

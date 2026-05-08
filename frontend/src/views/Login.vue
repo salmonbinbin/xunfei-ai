@@ -173,6 +173,19 @@
             <span class="teacher-entrance-text">我是教师</span>
             <router-link to="/teacher/login" class="teacher-entrance-link">教师端入口</router-link>
           </div>
+
+          <!-- 管理端入口 -->
+          <div class="admin-entrance">
+            <span class="admin-entrance-text">我是管理员</span>
+            <router-link to="/admin/login" class="admin-entrance-link">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 2L2 7l10 5 10-5-10-5z"/>
+                <path d="M2 17l10 5 10-5"/>
+                <path d="M2 12l10 5 10-5"/>
+              </svg>
+              管理后台
+            </router-link>
+          </div>
         </div>
       </div>
     </div>
@@ -663,6 +676,49 @@ async function handleSubmit() {
 .teacher-entrance-link:hover {
   color: var(--primary-hover);
   text-decoration: underline;
+}
+
+/* 管理端入口 - 显眼样式 */
+.admin-entrance {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.admin-entrance-text {
+  font-size: 13px;
+  color: var(--text-muted);
+}
+
+.admin-entrance-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6366F1;
+  text-decoration: none;
+  font-weight: 600;
+  padding: 6px 14px;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.08), rgba(139, 92, 246, 0.08));
+  border: 1px solid rgba(99, 102, 241, 0.2);
+  border-radius: 20px;
+  transition: all 0.25s ease;
+}
+
+.admin-entrance-link:hover {
+  color: #4F46E5;
+  background: linear-gradient(135deg, rgba(99, 102, 241, 0.15), rgba(139, 92, 246, 0.15));
+  border-color: rgba(99, 102, 241, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.2);
+}
+
+.admin-entrance-link svg {
+  flex-shrink: 0;
 }
 
 /* 响应式 */

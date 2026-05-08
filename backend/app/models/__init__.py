@@ -8,7 +8,9 @@ from app.models.schedule import Schedule
 from app.models.review import ReviewRecord, Transcription, Summary
 from app.models.chat import Conversation, Message
 from app.models.knowledge import KnowledgeBase
-from app.models.admin import AdminUser
+from app.models.admin import Admin, AdminUser
+from app.models.admin_log import AdminLog
+from app.models.user_log import UserLog, ApiLog, LoginLog
 from app.models.timetable import CourseAIInsight, CourseReminder
 from app.models.translation import TranslationTask
 from app.models.grade import GradeRecord, GradeItem, ExamStatus
@@ -29,7 +31,12 @@ __all__ = [
     "Conversation",
     "Message",
     "KnowledgeBase",
+    "Admin",
     "AdminUser",
+    "AdminLog",
+    "UserLog",
+    "ApiLog",
+    "LoginLog",
     "CourseAIInsight",
     "CourseReminder",
     "TranslationTask",

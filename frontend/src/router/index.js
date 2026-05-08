@@ -1,7 +1,49 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import { useUserStore } from '@/stores/user'
+import { useAdminStore } from '@/stores/admin'
+import logger from '@/utils/logger'
+
+// 管理端路由
+const adminRoutes = [
+  {
+    path: '/admin/login',
+    name: 'AdminLogin',
+    component: () => import('@/views/admin/AdminLogin.vue'),
+    meta: { requiresAuth: false, isAdmin: true }
+  },
+  {
+    path: '/admin',
+    component: () => import('@/layouts/AdminLayout.vue'),
+    meta: { requiresAuth: true, isAdmin: true },
+    children: [
+      {
+        path: '',
+        redirect: '/admin/dashboard'
+      },
+      {
+        path: 'dashboard',
+        name: 'AdminDashboard',
+        component: () => import('@/views/admin/AdminDashboard.vue')
+      },
+      {
+        path: 'users',
+        name: 'AdminUsers',
+        component: () => import('@/views/admin/AdminUsers.vue')
+      },
+      {
+        path: 'logs',
+        name: 'AdminLogs',
+        component: () => import('@/views/admin/AdminLogs.vue')
+      }
+    ]
+  }
+]
 
 const routes = [
+  // 管理端路由
+  ...adminRoutes,
+
+  // 学生端/教师端路由
   {
     path: '/login',
     name: 'Login',
@@ -66,7 +108,38 @@ const router = createRouter({
 
 router.beforeEach(async (to, from, next) => {
   const userStore = useUserStore()
+  const adminStore = useAdminStore()
 
+  // 管理端路由守卫
+  if (to.meta.isAdmin) {
+    // 管理端登录页
+    if (to.path === '/admin/login') {
+      if (adminStore.isLoggedIn) {
+        next('/admin/dashboard')
+        return
+      }
+      next()
+      return
+    }
+
+    // 管理端其他页面需要登录
+    if (to.meta.requiresAuth && !adminStore.isLoggedIn) {
+      logger.debug('[Router] Admin route requires auth, redirecting to login')
+      next('/admin/login')
+      return
+    }
+
+    // 已登录的管理端用户访问登录页
+    if (to.path === '/admin/login' && adminStore.isLoggedIn) {
+      next('/admin/dashboard')
+      return
+    }
+
+    next()
+    return
+  }
+
+  // 学生端/教师端路由守卫
   // 如果有 token 但没有 userInfo，先获取用户信息（页面刷新后 userInfo 为 null）
   if (userStore.token && !userStore.userInfo) {
     await userStore.fetchUser()

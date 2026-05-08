@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI小商教师端 - 日程视图</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0891B2;
+      --primary-light: #22D3EE;
+      --primary-dark: #0E7490;
+      --accent-green: #059669;
+      --accent-purple: #7C3AED;
+      --accent-red: #DC2626;
+      --accent-amber: #D97706;
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-warm: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 32px 24px 100px;
+    }
+
+    /* 顶部 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-icon svg { width: 22px; height: 22px; color: white; }
+
+    .brand-name {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .date-display {
+      font-size: 13px;
+      color: var(--text-secondary);
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+    }
+
+    .user-chip {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 6px 12px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .user-name { font-size: 13px; color: var(--text-primary); }
+
+    /* 主标题 */
+    .hero {
+      margin-bottom: 28px;
+    }
+
+    .hero-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .hero-subtitle {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* 主布局 */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 1fr 340px;
+      gap: 24px;
+    }
+
+    /* 日历区 */
+    .calendar-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .calendar-nav {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .nav-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--bg-warm);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .nav-btn:hover { background: var(--primary); color: white; }
+    .nav-btn svg { width: 16px; height: 16px; }
+
+    .month-label {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 15px;
+      font-weight: 600;
+    }
+
+    .calendar-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .weekday {
+      text-align: center;
+      font-size: 11px;
+      color: var(--text-muted);
+      padding: 8px 0;
+    }
+
+    .day-cell {
+      aspect-ratio: 1;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      position: relative;
+      font-size: 13px;
+      color: var(--text-primary);
+    }
+
+    .day-cell:hover { background: var(--bg-warm); }
+
+    .day-cell.today {
+      background: var(--primary);
+      color: white;
+    }
+
+    .day-cell.today:hover { background: var(--primary-dark); }
+
+    .day-cell.has-event::after {
+      content: '';
+      position: absolute;
+      bottom: 4px;
+      width: 4px;
+      height: 4px;
+      border-radius: 50%;
+      background: var(--accent-red);
+    }
+
+    .day-cell.today.has-event::after {
+      background: white;
+    }
+
+    /* 日程列表 */
+    .schedule-section {
+      margin-top: 24px;
+    }
+
+    .schedule-header {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 14px;
+      color: var(--text-primary);
+    }
+
+    .schedule-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .schedule-item {
+      display: flex;
+      gap: 12px;
+      padding: 14px;
+      background: var(--bg-warm);
+      border-radius: 10px;
+      border-left: 3px solid;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .schedule-item:hover { background: rgba(8, 145, 178, 0.06); }
+
+    .schedule-item:nth-child(1) { border-color: var(--primary); }
+    .schedule-item:nth-child(2) { border-color: var(--accent-purple); }
+    .schedule-item:nth-child(3) { border-color: var(--accent-green); }
+    .schedule-item:nth-child(4) { border-color: var(--accent-amber); }
+
+    .schedule-time {
+      font-size: 11px;
+      color: var(--text-muted);
+      min-width: 48px;
+    }
+
+    .schedule-content { flex: 1; }
+
+    .schedule-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .schedule-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* 右侧面板 */
+    .right-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* 功能入口 */
+    .functions-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .functions-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .functions-grid {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .func-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--bg-warm);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.25s;
+      border: 1px solid transparent;
+    }
+
+    .func-item:hover {
+      border-color: var(--primary);
+      box-shadow: 0 2px 8px rgba(8, 145, 178, 0.1);
+    }
+
+    .func-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .func-item:nth-child(1) .func-icon { background: rgba(8, 145, 178, 0.12); }
+    .func-item:nth-child(1) .func-icon svg { color: var(--primary); }
+
+    .func-item:nth-child(2) .func-icon { background: rgba(124, 58, 237, 0.12); }
+    .func-item:nth-child(2) .func-icon svg { color: var(--accent-purple); }
+
+    .func-item:nth-child(3) .func-icon { background: rgba(5, 150, 105, 0.12); }
+    .func-item:nth-child(3) .func-icon svg { color: var(--accent-green); }
+
+    .func-icon svg { width: 20px; height: 20px; }
+
+    .func-text {
+      flex: 1;
+    }
+
+    .func-title {
+      font-size: 13px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .func-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .func-arrow {
+      color: var(--text-muted);
+    }
+
+    .func-arrow svg { width: 16px; height: 16px; }
+
+    /* 本周概览 */
+    .week-overview {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .overview-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .overview-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .overview-badge {
+      font-size: 10px;
+      padding: 2px 8px;
+      background: rgba(8, 145, 178, 0.1);
+      color: var(--primary);
+      border-radius: 10px;
+    }
+
+    .overview-stats {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .overview-stat {
+      padding: 14px;
+      background: var(--bg-warm);
+      border-radius: 10px;
+      text-align: center;
+    }
+
+    .overview-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .overview-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* AI洞察 */
+    .ai-insight {
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.08), rgba(34, 211, 238, 0.04));
+      border: 1px solid rgba(8, 145, 178, 0.15);
+      border-radius: 14px;
+      padding: 18px;
+    }
+
+    .insight-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 12px;
+    }
+
+    .insight-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .insight-icon svg { width: 16px; height: 16px; color: white; }
+
+    .insight-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--primary);
+    }
+
+    .insight-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    /* 快捷操作 */
+    .quick-section {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+    }
+
+    .quick-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 12px;
+      background: var(--bg-warm);
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+    }
+
+    .quick-item:hover {
+      background: rgba(8, 145, 178, 0.08);
+      color: var(--primary);
+    }
+
+    .quick-item svg { width: 14px; height: 14px; }
+
+    @media (max-width: 900px) {
+      .main-layout { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- 头部 -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+            <path d="M12 14l6.16-3.42a12.08 12.08 0 01.65 6.42l-6.81 4 6.16 3.42L12 21l-6.16-3.42L5.03 17l6.81-4-.65 6.42L12 14z"/>
+          </svg>
+        </div>
+        <span class="brand-name">AI小商 · 教师端</span>
+      </div>
+
+      <div class="header-right">
+        <div class="date-display">2026年5月8日 周五</div>
+        <div class="user-chip">
+          <div class="user-avatar">张</div>
+          <span class="user-name">张老师</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- 主标题 -->
+    <section class="hero">
+      <h1 class="hero-title">教学日程</h1>
+      <p class="hero-subtitle">合理安排教学事务，提升工作效率</p>
+    </section>
+
+    <!-- 主布局 -->
+    <div class="main-layout">
+      <!-- 左侧日历 -->
+      <div class="calendar-section">
+        <div class="calendar-header">
+          <span class="month-label">2026年5月</span>
+          <div class="calendar-nav">
+            <button class="nav-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M15 19l-7-7 7-7"/>
+              </svg>
+            </button>
+            <button class="nav-btn">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 5l7 7-7 7"/>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="calendar-grid">
+          <div class="weekday">日</div>
+          <div class="weekday">一</div>
+          <div class="weekday">二</div>
+          <div class="weekday">三</div>
+          <div class="weekday">四</div>
+          <div class="weekday">五</div>
+          <div class="weekday">六</div>
+
+          <!-- 周日期 -->
+          <div class="day-cell"></div>
+          <div class="day-cell"></div>
+          <div class="day-cell">1</div>
+          <div class="day-cell">2</div>
+          <div class="day-cell has-event">3</div>
+          <div class="day-cell">4</div>
+          <div class="day-cell">5</div>
+
+          <div class="day-cell">6</div>
+          <div class="day-cell has-event">7</div>
+          <div class="day-cell today">8</div>
+          <div class="day-cell has-event">9</div>
+          <div class="day-cell">10</div>
+          <div class="day-cell has-event">11</div>
+          <div class="day-cell">12</div>
+
+          <div class="day-cell">13</div>
+          <div class="day-cell has-event">14</div>
+          <div class="day-cell">15</div>
+          <div class="day-cell">16</div>
+          <div class="day-cell has-event">17</div>
+          <div class="day-cell">18</div>
+          <div class="day-cell">19</div>
+
+          <div class="day-cell">20</div>
+          <div class="day-cell">21</div>
+          <div class="day-cell">22</div>
+          <div class="day-cell">23</div>
+          <div class="day-cell has-event">24</div>
+          <div class="day-cell">25</div>
+          <div class="day-cell">26</div>
+
+          <div class="day-cell">27</div>
+          <div class="day-cell">28</div>
+          <div class="day-cell has-event">29</div>
+          <div class="day-cell">30</div>
+          <div class="day-cell has-event">31</div>
+          <div class="day-cell"></div>
+          <div class="day-cell"></div>
+        </div>
+
+        <!-- 日程列表 -->
+        <div class="schedule-section">
+          <h3 class="schedule-header">今日日程</h3>
+          <div class="schedule-list">
+            <div class="schedule-item">
+              <div class="schedule-time">09:00<br>10:30</div>
+              <div class="schedule-content">
+                <div class="schedule-title">市场营销 授课</div>
+                <div class="schedule-meta">9教301 · 2022级工商管理1班</div>
+              </div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time">14:00<br>15:30</div>
+              <div class="schedule-content">
+                <div class="schedule-title">消费者行为分析 备课</div>
+                <div class="schedule-meta">第三章 · 下周授课</div>
+              </div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time">17:00<br>-</div>
+              <div class="schedule-content">
+                <div class="schedule-title">发布期中考试通知</div>
+                <div class="schedule-meta">截止日期</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧面板 -->
+      <div class="right-panel">
+        <!-- 功能入口 -->
+        <div class="functions-card">
+          <h3 class="functions-title">教学功能</h3>
+          <div class="functions-grid">
+            <div class="func-item">
+              <div class="func-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <div class="func-text">
+                <div class="func-title">成绩管理</div>
+                <div class="func-desc">智能分析成绩</div>
+              </div>
+              <div class="func-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="func-item">
+              <div class="func-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div class="func-text">
+                <div class="func-title">通知发布</div>
+                <div class="func-desc">AI生成通知</div>
+              </div>
+              <div class="func-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
+            </div>
+
+            <div class="func-item">
+              <div class="func-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+              </div>
+              <div class="func-text">
+                <div class="func-title">备课教案</div>
+                <div class="func-desc">AI生成PPT</div>
+              </div>
+              <div class="func-arrow">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 18l6-6-6-6"/>
+                </svg>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 本周概览 -->
+        <div class="week-overview">
+          <div class="overview-header">
+            <h3 class="overview-title">本周概览</h3>
+            <span class="overview-badge">第12周</span>
+          </div>
+          <div class="overview-stats">
+            <div class="overview-stat">
+              <div class="overview-value">12</div>
+              <div class="overview-label">授课课时</div>
+            </div>
+            <div class="overview-stat">
+              <div class="overview-value">3</div>
+              <div class="overview-label">备课任务</div>
+            </div>
+            <div class="overview-stat">
+              <div class="overview-value">86</div>
+              <div class="overview-label">学生作业</div>
+            </div>
+            <div class="overview-stat">
+              <div class="overview-value">2</div>
+              <div class="overview-label">待发通知</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- AI洞察 -->
+        <div class="ai-insight">
+          <div class="insight-header">
+            <div class="insight-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            </div>
+            <span class="insight-title">AI教学洞察</span>
+          </div>
+          <p class="insight-text">您教授的课程作业提交率本周下降了8%，建议通过飞书群提醒学生及时提交。</p>
+        </div>
+
+        <!-- 快捷操作 -->
+        <div class="quick-section">
+          <h3 class="functions-title">快捷操作</h3>
+          <div class="quick-grid">
+            <div class="quick-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 4v16m8-8H4"/>
+              </svg>
+              新建通知
+            </div>
+            <div class="quick-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/>
+              </svg>
+              导入成绩
+            </div>
+            <div class="quick-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+              导出报告
+            </div>
+            <div class="quick-item">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+              查看课表
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

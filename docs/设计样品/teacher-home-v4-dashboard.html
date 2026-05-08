@@ -1,0 +1,839 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI小商教师端 - 智能仪表盘</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;500;600;700&family=Noto+Sans+SC:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0891B2;
+      --primary-light: #22D3EE;
+      --primary-dark: #0E7490;
+      --accent-green: #059669;
+      --accent-purple: #7C3AED;
+      --accent-amber: #D97706;
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-warm: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 32px 100px;
+    }
+
+    /* 顶部导航 */
+    .top-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 40px;
+      padding-bottom: 24px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-icon svg { width: 24px; height: 24px; color: white; }
+
+    .brand-name {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+    }
+
+    .notification-btn {
+      position: relative;
+      width: 40px;
+      height: 40px;
+      border-radius: 10px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .notification-btn:hover {
+      background: var(--bg-warm);
+      border-color: var(--primary);
+    }
+
+    .notification-btn svg { width: 20px; height: 20px; color: var(--text-secondary); }
+
+    .notification-badge {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: #EF4444;
+      color: white;
+      font-size: 10px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .user-card {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 6px 14px 6px 6px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 24px;
+      cursor: pointer;
+    }
+
+    .user-avatar {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .user-name {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    /* 欢迎区块 */
+    .welcome-section {
+      margin-bottom: 32px;
+    }
+
+    .welcome-greeting {
+      font-size: 13px;
+      color: var(--primary);
+      font-weight: 500;
+      margin-bottom: 6px;
+    }
+
+    .welcome-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      line-height: 1.3;
+    }
+
+    .welcome-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* 统计卡片 */
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .stat-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 4px;
+      height: 100%;
+    }
+
+    .stat-card:nth-child(1)::before { background: var(--primary); }
+    .stat-card:nth-child(2)::before { background: var(--accent-purple); }
+    .stat-card:nth-child(3)::before { background: var(--accent-green); }
+    .stat-card:nth-child(4)::before { background: var(--accent-amber); }
+
+    .stat-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 6px;
+    }
+
+    .stat-value {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-change {
+      font-size: 11px;
+      margin-top: 4px;
+      color: var(--accent-green);
+    }
+
+    /* 主内容区 */
+    .main-grid {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 24px;
+    }
+
+    /* 左侧主功能 */
+    .main-functions {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .section-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .see-all {
+      font-size: 12px;
+      color: var(--primary);
+      cursor: pointer;
+    }
+
+    .function-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .function-card {
+      background: var(--bg-warm);
+      border-radius: 12px;
+      padding: 20px;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      border: 1px solid transparent;
+    }
+
+    .function-card:hover {
+      background: var(--bg-card);
+      border-color: var(--primary);
+      box-shadow: 0 4px 12px rgba(8, 145, 178, 0.1);
+      transform: translateY(-2px);
+    }
+
+    .function-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    .function-card:nth-child(1) .function-icon {
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.15), rgba(34, 211, 238, 0.1));
+    }
+    .function-card:nth-child(1) .function-icon svg { color: var(--primary); }
+
+    .function-card:nth-child(2) .function-icon {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(139, 92, 246, 0.1));
+    }
+    .function-card:nth-child(2) .function-icon svg { color: var(--accent-purple); }
+
+    .function-card:nth-child(3) .function-icon {
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(52, 211, 153, 0.1));
+    }
+    .function-card:nth-child(3) .function-icon svg { color: var(--accent-green); }
+
+    .function-icon svg { width: 22px; height: 22px; }
+
+    .function-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+
+    .function-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    /* 快捷工具 */
+    .quick-actions {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+      margin-top: 24px;
+    }
+
+    .quick-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+    }
+
+    .quick-btn {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 12px 14px;
+      background: var(--bg-warm);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s;
+      border: 1px solid transparent;
+    }
+
+    .quick-btn:hover {
+      background: rgba(8, 145, 178, 0.08);
+      border-color: rgba(8, 145, 178, 0.2);
+    }
+
+    .quick-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-icon svg { width: 16px; height: 16px; color: var(--primary); }
+
+    .quick-text {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    /* 右侧边栏 */
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    /* AI助手卡片 */
+    .ai-assistant {
+      background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+      border-radius: 16px;
+      padding: 24px;
+      color: white;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .ai-assistant::before {
+      content: '';
+      position: absolute;
+      top: -20px;
+      right: -20px;
+      width: 120px;
+      height: 120px;
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 50%;
+    }
+
+    .ai-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .ai-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .ai-avatar svg { width: 20px; height: 20px; }
+
+    .ai-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .ai-subtitle {
+      font-size: 11px;
+      opacity: 0.8;
+    }
+
+    .ai-suggestion {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 10px;
+      padding: 14px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* 待办列表 */
+    .todo-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .todo-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .todo-title {
+      font-family: 'Noto Serif SC', serif;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .todo-count {
+      font-size: 11px;
+      padding: 2px 8px;
+      background: rgba(8, 145, 178, 0.1);
+      color: var(--primary);
+      border-radius: 10px;
+    }
+
+    .todo-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .todo-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px;
+      background: var(--bg-warm);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .todo-item:hover {
+      background: rgba(8, 145, 178, 0.06);
+    }
+
+    .todo-checkbox {
+      width: 16px;
+      height: 16px;
+      border-radius: 4px;
+      border: 1.5px solid var(--border);
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .todo-content {
+      flex: 1;
+    }
+
+    .todo-text {
+      font-size: 12px;
+      color: var(--text-primary);
+      line-height: 1.4;
+    }
+
+    .todo-meta {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    .todo-item.urgent .todo-checkbox {
+      border-color: #EF4444;
+      background: rgba(239, 68, 68, 0.1);
+    }
+
+    .todo-item.urgent .todo-text {
+      color: #EF4444;
+    }
+
+    /* 最近使用 */
+    .recent-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 20px;
+    }
+
+    .recent-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .recent-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px;
+      background: var(--bg-warm);
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .recent-item:hover {
+      background: rgba(8, 145, 178, 0.06);
+    }
+
+    .recent-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .recent-item:nth-child(1) .recent-icon { background: rgba(8, 145, 178, 0.1); }
+    .recent-item:nth-child(1) .recent-icon svg { color: var(--primary); }
+
+    .recent-item:nth-child(2) .recent-icon { background: rgba(124, 58, 237, 0.1); }
+    .recent-item:nth-child(2) .recent-icon svg { color: var(--accent-purple); }
+
+    .recent-item:nth-child(3) .recent-icon { background: rgba(5, 150, 105, 0.1); }
+    .recent-item:nth-child(3) .recent-icon svg { color: var(--accent-green); }
+
+    .recent-icon svg { width: 16px; height: 16px; }
+
+    .recent-info {
+      flex: 1;
+    }
+
+    .recent-title {
+      font-size: 12px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .recent-time {
+      font-size: 10px;
+      color: var(--text-muted);
+    }
+
+    /* 响应式 */
+    @media (max-width: 1024px) {
+      .main-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: repeat(2, 1fr); }
+      .function-grid { grid-template-columns: repeat(3, 1fr); }
+    }
+
+    @media (max-width: 640px) {
+      .function-grid { grid-template-columns: 1fr; }
+      .stats-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- 顶部导航 -->
+    <nav class="top-nav">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+            <path d="M12 14l6.16-3.42a12.08 12.08 0 01.65 6.42l-6.81 4 6.16 3.42L12 21l-6.16-3.42L5.03 17l6.81-4-.65 6.42L12 14z"/>
+          </svg>
+        </div>
+        <span class="brand-name">AI小商</span>
+      </div>
+
+      <div class="nav-right">
+        <div class="notification-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M18 8A6 6 0 006 8c0 7-3 9-3 9h18s-3-2-3-9M13.73 21a2 2 0 01-3.46 0"/>
+          </svg>
+          <span class="notification-badge">3</span>
+        </div>
+
+        <div class="user-card">
+          <div class="user-avatar">张</div>
+          <span class="user-name">张老师</span>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 欢迎区块 -->
+    <section class="welcome-section">
+      <p class="welcome-greeting">周五 · 2026年5月8日</p>
+      <h1 class="welcome-title">下午好，张老师<br>您有3项待办事项</h1>
+      <p class="welcome-subtitle">本学期已授课12周，学生学习数据持续更新中</p>
+    </section>
+
+    <!-- 统计卡片 -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <div class="stat-label">本学期课程</div>
+        <div class="stat-value">5</div>
+        <div class="stat-change">↑ 较上学期 +1</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">学生总数</div>
+        <div class="stat-value">386</div>
+        <div class="stat-change">↑ 较上学期 +23</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">待发布通知</div>
+        <div class="stat-value">3</div>
+        <div class="stat-change">需处理</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label">本月课时</div>
+        <div class="stat-value">48</div>
+        <div class="stat-change">已完成</div>
+      </div>
+    </div>
+
+    <!-- 主内容 -->
+    <div class="main-grid">
+      <!-- 左侧 -->
+      <div class="main-content">
+        <!-- 主功能 -->
+        <div class="main-functions">
+          <div class="section-header">
+            <h2 class="section-title">教学功能</h2>
+            <span class="see-all">查看全部 →</span>
+          </div>
+
+          <div class="function-grid">
+            <div class="function-card">
+              <div class="function-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <div class="function-title">成绩管理</div>
+              <div class="function-desc">智能分析成绩分布，生成可视化图表</div>
+            </div>
+
+            <div class="function-card">
+              <div class="function-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div class="function-title">通知发布</div>
+              <div class="function-desc">AI生成规范通知，一键推送到飞书</div>
+            </div>
+
+            <div class="function-card">
+              <div class="function-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+              </div>
+              <div class="function-title">备课教案</div>
+              <div class="function-desc">AI生成教学大纲与PPT演示文稿</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 快捷工具 -->
+        <div class="quick-actions">
+          <div class="section-header">
+            <h2 class="section-title">快捷操作</h2>
+          </div>
+
+          <div class="quick-grid">
+            <div class="quick-btn">
+              <div class="quick-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 4v16m8-8H4"/>
+                </svg>
+              </div>
+              <span class="quick-text">新建成绩表</span>
+            </div>
+            <div class="quick-btn">
+              <div class="quick-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                </svg>
+              </div>
+              <span class="quick-text">生成上周周报</span>
+            </div>
+            <div class="quick-btn">
+              <div class="quick-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                </svg>
+              </div>
+              <span class="quick-text">期末考试安排</span>
+            </div>
+            <div class="quick-btn">
+              <div class="quick-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <span class="quick-text">导出成绩单</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 右侧边栏 -->
+      <div class="sidebar">
+        <!-- AI助手 -->
+        <div class="ai-assistant">
+          <div class="ai-header">
+            <div class="ai-avatar">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+              </svg>
+            </div>
+            <div>
+              <div class="ai-title">AI教学助手</div>
+              <div class="ai-subtitle">您的智能备课伙伴</div>
+            </div>
+          </div>
+          <div class="ai-suggestion">
+            📊 检测到您教授的「市场营销」课程班本周测验均分较低，建议关注第3、4章节的掌握情况...
+          </div>
+        </div>
+
+        <!-- 待办 -->
+        <div class="todo-card">
+          <div class="todo-header">
+            <h3 class="todo-title">今日待办</h3>
+            <span class="todo-count">3项</span>
+          </div>
+          <div class="todo-list">
+            <div class="todo-item urgent">
+              <div class="todo-checkbox"></div>
+              <div class="todo-content">
+                <div class="todo-text">发布下周考试通知</div>
+                <div class="todo-meta">今天 17:00 前</div>
+              </div>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <div class="todo-content">
+                <div class="todo-text">审阅学生提交的课程论文</div>
+                <div class="todo-meta">本周日 23:59 前</div>
+              </div>
+            </div>
+            <div class="todo-item">
+              <div class="todo-checkbox"></div>
+              <div class="todo-content">
+                <div class="todo-text">完成市场营销第三章教案</div>
+                <div class="todo-meta">下周一 09:00</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 最近使用 -->
+        <div class="recent-card">
+          <div class="section-header">
+            <h3 class="todo-title">最近使用</h3>
+          </div>
+          <div class="recent-list">
+            <div class="recent-item">
+              <div class="recent-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                </svg>
+              </div>
+              <div class="recent-info">
+                <div class="recent-title">2026春季成绩表</div>
+                <div class="recent-time">2小时前</div>
+              </div>
+            </div>
+            <div class="recent-item">
+              <div class="recent-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                </svg>
+              </div>
+              <div class="recent-info">
+                <div class="recent-title">期中考试通知</div>
+                <div class="recent-time">昨天</div>
+              </div>
+            </div>
+            <div class="recent-item">
+              <div class="recent-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                </svg>
+              </div>
+              <div class="recent-info">
+                <div class="recent-title">消费者行为分析教案</div>
+                <div class="recent-time">3天前</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>

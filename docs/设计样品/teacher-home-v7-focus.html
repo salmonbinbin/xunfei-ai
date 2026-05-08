@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI小商教师端 - 专注效率风格</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+SC:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #0891B2;
+      --primary-light: #22D3EE;
+      --primary-dark: #0E7490;
+      --accent-green: #059669;
+      --accent-purple: #7C3AED;
+      --bg-page: #F8FAFC;
+      --bg-card: #FFFFFF;
+      --bg-warm: #F1F5F9;
+      --text-primary: #0F172A;
+      --text-secondary: #475569;
+      --text-muted: #94A3B8;
+      --border: #E2E8F0;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Noto Sans SC', -apple-system, sans-serif;
+      background: var(--bg-page);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .page {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 48px 32px 100px;
+    }
+
+    /* 头部 */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 48px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .brand-icon svg { width: 22px; height: 22px; color: white; }
+
+    .brand-name {
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    .user-badge {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 14px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+    }
+
+    .user-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 11px;
+      font-weight: 600;
+    }
+
+    .user-name { font-size: 13px; }
+
+    /* 问候区 */
+    .greeting {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .greeting-time {
+      font-size: 12px;
+      color: var(--primary);
+      font-weight: 500;
+      letter-spacing: 2px;
+      margin-bottom: 8px;
+    }
+
+    .greeting-title {
+      font-size: 32px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 8px;
+    }
+
+    .greeting-subtitle {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+
+    /* 核心功能 - 大卡片 */
+    .core-functions {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+
+    .core-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      padding: 28px 32px;
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .core-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+    }
+
+    .core-card:nth-child(1)::before { background: var(--primary); }
+    .core-card:nth-child(2)::before { background: var(--accent-purple); }
+    .core-card:nth-child(3)::before { background: var(--accent-green); }
+
+    .core-card:hover {
+      transform: translateX(8px);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.06);
+      border-color: transparent;
+    }
+
+    .core-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .core-card:nth-child(1) .core-icon {
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.15), rgba(34, 211, 238, 0.08));
+    }
+    .core-card:nth-child(1) .core-icon svg { color: var(--primary); }
+
+    .core-card:nth-child(2) .core-icon {
+      background: linear-gradient(135deg, rgba(124, 58, 237, 0.15), rgba(139, 92, 246, 0.08));
+    }
+    .core-card:nth-child(2) .core-icon svg { color: var(--accent-purple); }
+
+    .core-card:nth-child(3) .core-icon {
+      background: linear-gradient(135deg, rgba(5, 150, 105, 0.15), rgba(52, 211, 153, 0.08));
+    }
+    .core-card:nth-child(3) .core-icon svg { color: var(--accent-green); }
+
+    .core-icon svg { width: 28px; height: 28px; }
+
+    .core-content { flex: 1; }
+
+    .core-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 6px;
+    }
+
+    .core-desc {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    .core-tags {
+      display: flex;
+      gap: 8px;
+    }
+
+    .core-tag {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 6px;
+      background: var(--bg-warm);
+      color: var(--text-secondary);
+    }
+
+    .core-arrow {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: var(--bg-warm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-muted);
+      transition: all 0.3s;
+    }
+
+    .core-card:hover .core-arrow {
+      background: var(--primary);
+      color: white;
+      transform: translateX(4px);
+    }
+
+    .core-arrow svg { width: 18px; height: 18px; }
+
+    /* 底部区块 */
+    .bottom-section {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    /* 统计卡片 */
+    .stats-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .stats-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+    }
+
+    .stats-title {
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .stats-period {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+    }
+
+    .stat-item {
+      text-align: center;
+      padding: 12px;
+      background: var(--bg-warm);
+      border-radius: 10px;
+    }
+
+    .stat-value {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+
+    .stat-label {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+
+    /* 快捷入口 */
+    .quick-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 24px;
+    }
+
+    .quick-header {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .quick-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .quick-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: var(--bg-warm);
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .quick-item:hover {
+      background: rgba(8, 145, 178, 0.08);
+    }
+
+    .quick-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      background: var(--bg-card);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .quick-icon svg { width: 14px; height: 14px; color: var(--primary); }
+
+    .quick-text {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    /* AI助手入口 */
+    .ai-card {
+      background: linear-gradient(135deg, rgba(8, 145, 178, 0.06), rgba(34, 211, 238, 0.03));
+      border: 1px solid rgba(8, 145, 178, 0.12);
+      border-radius: 16px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+
+    .ai-card:hover {
+      border-color: var(--primary);
+      box-shadow: 0 4px 16px rgba(8, 145, 178, 0.1);
+    }
+
+    .ai-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, var(--primary), var(--primary-light));
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .ai-avatar svg { width: 24px; height: 24px; color: white; }
+
+    .ai-content { flex: 1; }
+
+    .ai-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .ai-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    .ai-arrow {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(8, 145, 178, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--primary);
+    }
+
+    .ai-arrow svg { width: 16px; height: 16px; }
+
+    @media (max-width: 768px) {
+      .core-card { flex-direction: column; text-align: center; }
+      .core-tags { justify-content: center; }
+      .bottom-section { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <!-- 头部 -->
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 14l9-5-9-5-9 5 9 5z"/>
+            <path d="M12 14l6.16-3.42a12.08 12.08 0 01.65 6.42l-6.81 4 6.16 3.42L12 21l-6.16-3.42L5.03 17l6.81-4-.65 6.42L12 14z"/>
+          </svg>
+        </div>
+        <span class="brand-name">AI小商</span>
+      </div>
+
+      <div class="user-badge">
+        <div class="user-avatar">张</div>
+        <span class="user-name">张老师</span>
+      </div>
+    </header>
+
+    <!-- 问候 -->
+    <section class="greeting">
+      <p class="greeting-time">下午好 · 周五</p>
+      <h1 class="greeting-title">张老师，准备好开始了吗？</h1>
+      <p class="greeting-subtitle">选择您需要的功能，开启智能教学之旅</p>
+    </section>
+
+    <!-- 核心功能 -->
+    <div class="core-functions">
+      <div class="core-card">
+        <div class="core-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+          </svg>
+        </div>
+        <div class="core-content">
+          <h3 class="core-title">成绩管理</h3>
+          <p class="core-desc">上传学生成绩，AI智能分析成绩分布，生成可视化图表与统计报告</p>
+          <div class="core-tags">
+            <span class="core-tag">智能分析</span>
+            <span class="core-tag">可视化图表</span>
+            <span class="core-tag">一键导出</span>
+          </div>
+        </div>
+        <div class="core-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="core-card">
+        <div class="core-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+          </svg>
+        </div>
+        <div class="core-content">
+          <h3 class="core-title">通知发布</h3>
+          <p class="core-desc">输入通知主题，AI生成格式规范的通知文档，支持一键发送到飞书群</p>
+          <div class="core-tags">
+            <span class="core-tag">AI生成</span>
+            <span class="core-tag">格式规范</span>
+            <span class="core-tag">飞书推送</span>
+          </div>
+        </div>
+        <div class="core-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="core-card">
+        <div class="core-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div class="core-content">
+          <h3 class="core-title">备课教案</h3>
+          <p class="core-desc">描述课程知识点，AI生成结构化教学大纲与精美PPT演示文稿</p>
+          <div class="core-tags">
+            <span class="core-tag">AI大纲</span>
+            <span class="core-tag">PPT生成</span>
+            <span class="core-tag">教学建议</span>
+          </div>
+        </div>
+        <div class="core-arrow">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9 18l6-6-6-6"/>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <!-- 底部区块 -->
+    <div class="bottom-section">
+      <!-- 统计 -->
+      <div class="stats-card">
+        <div class="stats-header">
+          <h3 class="stats-title">本周概览</h3>
+          <span class="stats-period">第12周</span>
+        </div>
+        <div class="stats-grid">
+          <div class="stat-item">
+            <div class="stat-value">12</div>
+            <div class="stat-label">授课课时</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">386</div>
+            <div class="stat-label">学生人数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">5</div>
+            <div class="stat-label">待办事项</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 快捷入口 -->
+      <div class="quick-card">
+        <h3 class="quick-header">快捷入口</h3>
+        <div class="quick-list">
+          <div class="quick-item">
+            <div class="quick-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 4v16m8-8H4"/>
+              </svg>
+            </div>
+            <span class="quick-text">新建成绩表</span>
+          </div>
+          <div class="quick-item">
+            <div class="quick-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+              </svg>
+            </div>
+            <span class="quick-text">导出本周报告</span>
+          </div>
+          <div class="quick-item">
+            <div class="quick-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+              </svg>
+            </div>
+            <span class="quick-text">查看本学期课表</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AI助手入口 -->
+    <div class="ai-card" style="margin-top: 20px;">
+      <div class="ai-avatar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"/>
+        </svg>
+      </div>
+      <div class="ai-content">
+        <h3 class="ai-title">AI教学助手</h3>
+        <p class="ai-desc">智能备课建议 · 成绩分析洞察 · 教学反馈</p>
+      </div>
+      <div class="ai-arrow">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M9 18l6-6-6-6"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
