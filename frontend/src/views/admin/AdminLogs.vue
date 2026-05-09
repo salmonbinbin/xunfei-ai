@@ -1,79 +1,77 @@
 <template>
   <div class="admin-logs">
-    <!-- 页面标题 -->
+    <!-- 页面标题区 -->
     <div class="page-header">
-      <div class="header-content">
-        <div class="title-row">
-          <h1 class="page-title">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-              <line x1="16" y1="13" x2="8" y2="13"/>
-              <line x1="16" y1="17" x2="8" y2="17"/>
-            </svg>
-            操作日志
-          </h1>
-          <el-button
-            type="primary"
-            :loading="analyzing"
-            @click="handleAIAnalyze"
-            class="ai-analyze-btn"
-          >
-            <MagicStick v-if="!analyzing" />
-            AI智能分析
-          </el-button>
-        </div>
+      <div class="header-left">
+        <h1 class="page-title">
+          <el-icon><Document /></el-icon>
+          操作日志
+        </h1>
         <p class="page-subtitle">审计所有管理员操作记录</p>
       </div>
+      <el-button type="primary" :loading="analyzing" @click="handleAIAnalyze" class="ai-btn">
+        <el-icon v-if="!analyzing"><MagicStick /></el-icon>
+        AI智能分析
+      </el-button>
     </div>
 
     <!-- AI分析结果卡片 -->
     <div v-if="analysisResult" class="analysis-card">
       <div class="analysis-header">
         <div class="analysis-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
-            <path d="M12 2a10 10 0 0 1 10 10"/>
-          </svg>
-          AI行为分析
+          <el-icon><DataAnalysis /></el-icon>
+          AI行为分析报告
         </div>
-        <el-button text @click="analysisResult = null">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polyline points="18 15 12 9 6 15"/>
-          </svg>
-          收起
-        </el-button>
+        <el-button text @click="analysisResult = null">收起</el-button>
       </div>
-      <div class="analysis-summary">{{ analysisResult.summary }}</div>
-      <div class="analysis-stats">
-        <div class="stat-item">
-          <span class="stat-label">总操作</span>
-          <span class="stat-value">{{ analysisResult.total_actions }}</span>
+      <div class="analysis-body">
+        <div class="analysis-summary">{{ analysisResult.summary }}</div>
+        <div class="analysis-grid">
+          <div class="analysis-stat">
+            <div class="stat-num">{{ analysisResult.total_count || 0 }}</div>
+            <div class="stat-label">总操作次数</div>
+          </div>
+          <div class="analysis-stat">
+            <div class="stat-num">{{ analysisResult.peak_hour || 0 }}:00</div>
+            <div class="stat-label">高峰时段</div>
+          </div>
+          <div class="analysis-stat">
+            <div class="stat-num">{{ analysisResult.active_days || 0 }}</div>
+            <div class="stat-label">活跃天数</div>
+          </div>
         </div>
-        <div class="stat-item">
-          <span class="stat-label">高峰时段</span>
-          <span class="stat-value">{{ analysisResult.peak_hour }}</span>
+        <div class="top-actions">
+          <div class="top-actions-title">操作类型分布</div>
+          <div class="top-actions-list">
+            <div v-for="(item, idx) in analysisResult.top_actions" :key="idx" class="top-action-item">
+              <span class="action-rank">{{ idx + 1 }}</span>
+              <span class="action-name">{{ item.action_text }}</span>
+              <span class="action-count">{{ item.count }}次</span>
+              <div class="action-bar" :style="{ width: (item.count / (analysisResult.top_actions[0]?.count || 1) * 100) + '%' }"></div>
+            </div>
+          </div>
+        </div>
+        <div class="trend-section">
+          <div class="trend-title">7日操作趋势</div>
+          <div ref="trendChartRef" class="trend-chart"></div>
         </div>
       </div>
-      <div class="trend-chart" ref="trendChartRef"></div>
     </div>
 
     <!-- 筛选工具栏 -->
-    <div class="filter-bar">
-      <!-- 快捷筛选按钮 -->
+    <div class="filter-card">
       <div class="quick-filters">
-        <el-button
+        <el-tag
           v-for="filter in quickFilters"
           :key="filter.value"
-          :type="filters.action === filter.value ? 'primary' : ''"
-          :class="{ active: filters.action === filter.value }"
+          :type="filters.action === filter.value ? 'primary' : 'info'"
+          :hit="filters.action === filter.value"
+          class="quick-tag"
           @click="handleQuickFilter(filter.value)"
-          class="quick-filter-btn"
         >
           {{ filter.label }}
-        </el-button>
+        </el-tag>
       </div>
-
       <div class="filter-row">
         <el-date-picker
           v-model="dateRange"
@@ -84,100 +82,59 @@
           value-format="YYYY-MM-DD"
           @change="handleDateChange"
         />
-
         <el-select v-model="filters.action" placeholder="操作类型" clearable @change="handleFilterChange">
-          <el-option
-            v-for="item in actionTypes"
-            :key="item.value"
-            :label="item.label"
-            :value="item.value"
-          />
+          <el-option v-for="item in actionTypes" :key="item.value" :label="item.label" :value="item.value" />
         </el-select>
-
         <el-select v-model="filters.admin_id" placeholder="管理员" clearable @change="handleFilterChange">
-          <el-option
-            v-for="admin in adminList"
-            :key="admin.id"
-            :label="admin.nickname"
-            :value="admin.id"
-          />
+          <el-option v-for="admin in adminList" :key="admin.id" :label="admin.nickname" :value="admin.id" />
         </el-select>
-      </div>
-
-      <div class="filter-actions">
-        <el-button @click="handleReset">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"/>
-            <path d="M3 3v5h5"/>
-          </svg>
-          重置
-        </el-button>
-        <el-button @click="handleRefresh">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M23 4v6h-6"/>
-            <path d="M1 20v-6h6"/>
-            <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/>
-          </svg>
-          刷新
-        </el-button>
+        <el-button @click="handleReset">重置</el-button>
+        <el-button type="primary" @click="handleRefresh">刷新</el-button>
       </div>
     </div>
 
     <!-- 日志列表 -->
-    <div class="logs-table">
-      <el-table
-        :data="logs"
-        v-loading="loading"
-        stripe
-      >
-        <el-table-column prop="created_at" label="操作时间" width="180">
+    <div class="logs-card">
+      <el-table :data="logs" v-loading="loading" stripe>
+        <el-table-column prop="created_at" label="操作时间" width="150">
           <template #default="{ row }">
-            <span class="time-cell">{{ formatTime(row.created_at) }}</span>
+            <span class="time-text">{{ formatTime(row.created_at) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="admin_name" label="管理员" width="120">
           <template #default="{ row }">
-            <div class="admin-cell">
-              <div class="admin-avatar">{{ row.admin_name?.[0] || 'A' }}</div>
-              <span>{{ row.admin_name }}</span>
+            <div class="admin-info">
+              <el-avatar size="small" class="admin-avatar">{{ row.admin_name?.[0] || 'A' }}</el-avatar>
+              <span class="admin-name">{{ row.admin_name }}</span>
             </div>
           </template>
         </el-table-column>
-        <el-table-column prop="action_text" label="操作类型" width="140">
+        <el-table-column prop="action_text" label="操作类型" width="120">
           <template #default="{ row }">
-            <span class="action-badge" :class="getActionClass(row.action)">
-              {{ row.action_text }}
-            </span>
+            <el-tag :type="getActionTagType(row.action)" size="small">{{ row.action_text }}</el-tag>
           </template>
         </el-table-column>
-        <el-table-column label="操作详情" min-width="200">
+        <el-table-column label="操作详情" min-width="280">
           <template #default="{ row }">
-            <div class="detail-cell">
-              <span class="target-info" v-if="row.target_type">
-                {{ row.target_type }} #{{ row.target_id }}
-              </span>
-              <span class="detail-info" v-if="row.detail">
-                {{ formatDetail(row.detail) }}
-              </span>
-            </div>
+            <div class="detail-text">{{ formatDetail(row) }}</div>
           </template>
         </el-table-column>
-        <el-table-column prop="ip_address" label="IP地址" width="140">
+        <el-table-column prop="ip_address" label="IP地址" width="130">
           <template #default="{ row }">
-            <span class="ip-cell">{{ row.ip_address || '-' }}</span>
+            <code class="ip-code">{{ row.ip_address || '-' }}</code>
           </template>
         </el-table-column>
       </el-table>
     </div>
 
     <!-- 分页 -->
-    <div class="pagination-wrapper">
+    <div class="pagination-card">
       <el-pagination
         v-model:current-page="pagination.page"
         v-model:page-size="pagination.pageSize"
         :total="pagination.total"
         :page-sizes="[20, 50, 100]"
-        layout="total, sizes, prev, pager, next, jumper"
+        layout="total, sizes, prev, pager, next"
         @size-change="handleSizeChange"
         @current-change="handlePageChange"
       />
@@ -188,36 +145,26 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { MagicStick } from '@element-plus/icons-vue'
+import { MagicStick, Document, DataAnalysis } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { getLogs, getLogActions, analyzeLogs } from '@/api/admin/log'
-import { getLineChartOption } from '@/utils/echarts'
 import logger from '@/utils/logger'
 
-// 快捷筛选
 const quickFilters = [
   { label: '全部', value: '' },
-  { label: '禁用', value: 'user.disable' },
-  { label: '启用', value: 'user.enable' },
-  { label: '导出', value: 'user.export' },
-  { label: '登录', value: 'login' }
+  { label: '禁用用户', value: 'user.disable' },
+  { label: '启用用户', value: 'user.enable' },
+  { label: '导出数据', value: 'user.export' },
+  { label: '登录登出', value: 'login' }
 ]
 
-// 分析状态
 const analyzing = ref(false)
 const analysisResult = ref(null)
 const trendChartRef = ref(null)
-
-// 日志列表数据
 const logs = ref([])
-
-// 加载状态
 const loading = ref(false)
-
-// 日期范围
 const dateRange = ref([])
 
-// 筛选条件
 const filters = reactive({
   start_date: '',
   end_date: '',
@@ -225,111 +172,143 @@ const filters = reactive({
   admin_id: ''
 })
 
-// 分页
 const pagination = reactive({
   page: 1,
   pageSize: 20,
   total: 0
 })
 
-// 操作类型选项
 const actionTypes = ref([])
-
-// 管理员列表（从日志中提取）
 const adminList = ref([])
 
-// 快捷筛选
 function handleQuickFilter(value) {
   filters.action = value
   pagination.page = 1
   fetchLogs()
 }
 
-// AI分析
 async function handleAIAnalyze() {
   analyzing.value = true
   try {
     const res = await analyzeLogs()
     analysisResult.value = res.data?.data || res.data || {}
-    logger.info('[AdminLogs] AI analysis completed:', analysisResult.value)
-
-    // 延迟初始化图表确保DOM已渲染
-    setTimeout(() => {
-      initTrendChart()
-    }, 100)
+    setTimeout(() => initTrendChart(), 100)
   } catch (error) {
-    logger.error('[AdminLogs] AI analysis failed:', error?.response?.data || error.message)
-    ElMessage.error('AI分析失败，请稍后重试')
+    ElMessage.error('AI分析失败')
   } finally {
     analyzing.value = false
   }
 }
 
-// 初始化趋势图表
 function initTrendChart() {
-  if (!trendChartRef.value || !analysisResult.value?.daily_trend) return
-
-  const chartDom = trendChartRef.value
-  const myChart = echarts.getInstanceByDom(chartDom)
-
-  if (myChart) {
-    myChart.dispose()
-  }
-
-  const chart = echarts.init(chartDom)
-  const dailyTrend = analysisResult.value.daily_trend
-
-  const option = getLineChartOption(
-    dailyTrend.map(d => d.count),
-    dailyTrend.map(d => d.date),
-    '操作次数'
-  )
-
-  chart.setOption(option)
+  if (!trendChartRef.value || !analysisResult.value?.trend) return
+  const chart = echarts.init(trendChartRef.value)
+  const trend = analysisResult.value.trend
+  chart.setOption({
+    tooltip: { trigger: 'axis' },
+    grid: { left: '3%', right: '4%', bottom: '3%', top: '10%', containLabel: true },
+    xAxis: {
+      type: 'category',
+      data: trend.map(d => d.date.slice(5)),
+      axisLine: { lineStyle: { color: '#E2E8F0' } },
+      axisLabel: { color: '#64748B' }
+    },
+    yAxis: {
+      type: 'value',
+      axisLine: { show: false },
+      axisLabel: { color: '#64748B' },
+      splitLine: { lineStyle: { color: '#F1F5F9' } }
+    },
+    series: [{
+      type: 'line',
+      data: trend.map(d => d.count),
+      smooth: true,
+      areaStyle: {
+        color: {
+          type: 'linear',
+          x: 0, y: 0, x2: 0, y2: 1,
+          colorStops: [
+            { offset: 0, color: 'rgba(8, 145, 178, 0.3)' },
+            { offset: 1, color: 'rgba(8, 145, 178, 0.05)' }
+          ]
+        }
+      },
+      lineStyle: { color: '#0891B2', width: 2 },
+      itemStyle: { color: '#0891B2' },
+      symbol: 'circle',
+      symbolSize: 6
+    }]
+  })
 }
 
-// 时间格式化（分级显示）
 function formatTime(dateStr) {
   if (!dateStr) return '-'
-
   const date = new Date(dateStr)
   const now = new Date()
   const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
-  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
-
+  const yesterday = new Date(today.getTime() - 86400000)
   const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
 
-  const pad = (n) => String(n).padStart(2, '0')
-  const timeStr = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
-
   if (dateOnly.getTime() === today.getTime()) {
-    return `今天 ${timeStr}`
+    return `今天 ${date.toTimeString().slice(0, 8)}`
   } else if (dateOnly.getTime() === yesterday.getTime()) {
-    return `昨天 ${timeStr}`
-  } else {
-    const monthDay = `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-    return `${monthDay} ${timeStr}`
+    return `昨天 ${date.toTimeString().slice(0, 8)}`
   }
+  return `${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')} ${date.toTimeString().slice(0, 8)}`
 }
 
-// 获取日志列表
+function getActionTagType(action) {
+  if (action?.includes('disable')) return 'danger'
+  if (action?.includes('enable')) return 'success'
+  if (action?.includes('export')) return 'warning'
+  if (action?.includes('login')) return 'info'
+  return ''
+}
+
+function formatDetail(row) {
+  if (!row.detail) return '-'
+  if (row.action === 'user.disable') {
+    return `禁用用户ID #${row.target_id}${row.detail?.reason ? '，原因：' + row.detail.reason : ''}`
+  }
+  if (row.action === 'user.enable') {
+    return `启用用户ID #${row.target_id}`
+  }
+  if (row.action === 'user.export') {
+    return `导出用户数据${row.detail?.count ? '，共' + row.detail.count + '条' : ''}`
+  }
+  if (row.action === 'user.view') {
+    return `查看用户ID #${row.target_id}的详情`
+  }
+  if (row.action === 'login') {
+    return '管理员登录系统'
+  }
+  if (row.action === 'logout') {
+    return '管理员退出登录'
+  }
+  if (row.action === 'dashboard.view') {
+    return '查看数据驾驶舱'
+  }
+  if (row.action === 'log.view') {
+    return '查看操作日志'
+  }
+  if (typeof row.detail === 'object') {
+    return Object.entries(row.detail).map(([k, v]) => `${k}: ${v}`).join('，')
+  }
+  return String(row.detail)
+}
+
 async function fetchLogs() {
   loading.value = true
-  logger.info('[AdminLogs] Fetching logs with filters:', filters)
-
   try {
-    const params = {
+    const res = await getLogs({
       page: pagination.page,
       page_size: pagination.pageSize,
       ...filters
-    }
-    const res = await getLogs(params)
-
+    })
     const data = res.data?.data || res.data || {}
     logs.value = data.items || []
     pagination.total = data.total || 0
 
-    // 提取管理员列表
     if (logs.value.length > 0) {
       const adminMap = new Map()
       logs.value.forEach(log => {
@@ -339,63 +318,47 @@ async function fetchLogs() {
       })
       adminList.value = Array.from(adminMap.values())
     }
-
-    logger.info('[AdminLogs] Logs fetched:', logs.value.length)
   } catch (error) {
-    logger.error('[AdminLogs] Failed to fetch logs:', error?.response?.data || error.message)
     ElMessage.error('获取日志列表失败')
   } finally {
     loading.value = false
   }
 }
 
-// 获取操作类型枚举
 async function fetchActionTypes() {
   try {
     const res = await getLogActions()
     actionTypes.value = res.data?.data || res.data || []
-    logger.debug('[AdminLogs] Action types loaded:', actionTypes.value.length)
   } catch (error) {
-    logger.error('[AdminLogs] Failed to fetch action types:', error.message)
+    logger.error('Failed to fetch action types')
   }
 }
 
-// 日期变化
 function handleDateChange(val) {
-  if (val && val.length === 2) {
-    filters.start_date = val[0]
-    filters.end_date = val[1]
-  } else {
-    filters.start_date = ''
-    filters.end_date = ''
-  }
+  filters.start_date = val?.[0] || ''
+  filters.end_date = val?.[1] || ''
   pagination.page = 1
   fetchLogs()
 }
 
-// 筛选变化
 function handleFilterChange() {
   pagination.page = 1
   fetchLogs()
 }
 
-// 重置
 function handleReset() {
   dateRange.value = []
   filters.start_date = ''
   filters.end_date = ''
   filters.action = ''
   filters.admin_id = ''
-  pagination.page = 1
   fetchLogs()
 }
 
-// 刷新
 function handleRefresh() {
   fetchLogs()
 }
 
-// 分页变化
 function handlePageChange(page) {
   pagination.page = page
   fetchLogs()
@@ -407,135 +370,82 @@ function handleSizeChange(size) {
   fetchLogs()
 }
 
-// 获取操作样式类
-function getActionClass(action) {
-  if (action?.includes('disable')) return 'danger'
-  if (action?.includes('enable')) return 'success'
-  if (action?.includes('export')) return 'info'
-  if (action?.includes('view')) return 'default'
-  return 'default'
-}
-
-// 格式化详情
-function formatDetail(detail) {
-  if (!detail) return ''
-  if (typeof detail === 'string') return detail
-  try {
-    return JSON.stringify(detail)
-  } catch {
-    return String(detail)
-  }
-}
-
 onMounted(() => {
-  logger.debug('[AdminLogs] Component mounted')
   fetchActionTypes()
   fetchLogs()
 })
 </script>
 
 <style scoped>
-/* ============================================
-   AI小商 管理端操作日志页面
-   设计风格: 深色科技风 + 数据表格
-   ============================================ */
-
-:root {
-  --primary: #0891B2;
-  --primary-light: #22D3EE;
-  --success: #059669;
-  --danger: #EF4444;
-  --info: #0284C7;
-  --bg-dark: #0F172A;
-  --bg-card: #1E293B;
-  --bg-card-hover: #273549;
-  --border-color: #334155;
-  --text-primary: #F1F5F9;
-  --text-secondary: #94A3B8;
-  --text-muted: #64748B;
-}
-
 .admin-logs {
-  max-width: 1600px;
+  padding: 24px;
+  max-width: 1400px;
   margin: 0 auto;
-  font-family: 'Inter', 'Noto Sans SC', -apple-system, sans-serif;
 }
 
-/* 页面标题 */
+/* 页面标题区 */
 .page-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
   margin-bottom: 24px;
+  background: #FFFFFF;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.header-content {
+.header-left {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.title-row {
-  display: flex;
-  align-items: center;
-  gap: 16px;
+  gap: 4px;
 }
 
 .page-title {
   display: flex;
   align-items: center;
-  gap: 12px;
-  font-size: 28px;
+  gap: 10px;
+  font-size: 24px;
   font-weight: 700;
-  color: var(--text-primary);
+  color: #1E293B;
   margin: 0;
 }
 
-.page-title svg {
-  width: 28px;
-  height: 28px;
-  color: var(--primary);
+.page-title .el-icon {
+  color: #0891B2;
+  font-size: 28px;
 }
 
 .page-subtitle {
   font-size: 14px;
-  color: var(--text-muted);
+  color: #64748B;
   margin: 0;
 }
 
-/* AI分析按钮 */
-.ai-analyze-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+.ai-btn {
+  padding: 12px 24px;
+  font-weight: 600;
+  background: linear-gradient(135deg, #0891B2, #22D3EE);
   border: none;
   border-radius: 12px;
-  padding: 10px 20px;
-  font-weight: 600;
-  transition: all 0.3s ease;
 }
 
-.ai-analyze-btn:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 16px rgba(8, 145, 178, 0.4);
-}
-
-.ai-analyze-btn :deep(.el-icon) {
-  font-size: 16px;
-}
-
-/* AI分析结果卡片 */
+/* AI分析卡片 */
 .analysis-card {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+  background: #FFFFFF;
   border-radius: 16px;
   padding: 24px;
   margin-bottom: 20px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
 }
 
 .analysis-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #E2E8F0;
 }
 
 .analysis-title {
@@ -544,303 +454,244 @@ onMounted(() => {
   gap: 10px;
   font-size: 18px;
   font-weight: 600;
-  color: var(--text-primary);
+  color: #1E293B;
 }
 
-.analysis-title svg {
-  width: 22px;
-  height: 22px;
-  color: var(--primary-light);
+.analysis-title .el-icon {
+  color: #0891B2;
+  font-size: 22px;
 }
 
-.analysis-header :deep(.el-button) {
+.analysis-body {
   display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-secondary);
-  font-size: 13px;
-}
-
-.analysis-header :deep(.el-button svg) {
-  width: 16px;
-  height: 16px;
+  flex-direction: column;
+  gap: 20px;
 }
 
 .analysis-summary {
   font-size: 15px;
-  color: var(--text-secondary);
-  line-height: 1.6;
-  margin-bottom: 20px;
+  color: #475569;
+  line-height: 1.7;
   padding: 16px;
-  background: rgba(8, 145, 178, 0.08);
+  background: #F8FAFC;
   border-radius: 12px;
-  border-left: 3px solid var(--primary);
+  border-left: 4px solid #0891B2;
 }
 
-.analysis-stats {
-  display: flex;
-  gap: 24px;
-  margin-bottom: 24px;
+.analysis-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
 }
 
-.stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
+.analysis-stat {
+  background: #F8FAFC;
+  padding: 20px;
+  border-radius: 12px;
+  text-align: center;
+}
+
+.stat-num {
+  font-size: 32px;
+  font-weight: 700;
+  color: #0891B2;
+  line-height: 1;
 }
 
 .stat-label {
-  font-size: 12px;
-  color: var(--text-muted);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
+  font-size: 13px;
+  color: #64748B;
+  margin-top: 8px;
 }
 
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: var(--primary-light);
+.top-actions {
+  background: #F8FAFC;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.top-actions-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E293B;
+  margin-bottom: 16px;
+}
+
+.top-actions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.top-action-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  position: relative;
+}
+
+.action-rank {
+  width: 20px;
+  height: 20px;
+  background: #0891B2;
+  color: #FFFFFF;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.action-name {
+  font-size: 14px;
+  color: #475569;
+  width: 100px;
+}
+
+.action-count {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E293B;
+  margin-left: auto;
+}
+
+.action-bar {
+  position: absolute;
+  bottom: -4px;
+  left: 32px;
+  height: 4px;
+  background: linear-gradient(90deg, #0891B2, #22D3EE);
+  border-radius: 2px;
+  max-width: 120px;
+}
+
+.trend-section {
+  background: #F8FAFC;
+  padding: 20px;
+  border-radius: 12px;
+}
+
+.trend-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: #1E293B;
+  margin-bottom: 16px;
 }
 
 .trend-chart {
-  height: 200px;
-  background: var(--bg-dark);
-  border-radius: 12px;
-  padding: 16px;
+  height: 160px;
 }
 
-/* 快捷筛选 */
+/* 筛选工具栏 */
+.filter-card {
+  background: #FFFFFF;
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
 .quick-filters {
   display: flex;
   gap: 8px;
   margin-bottom: 16px;
   padding-bottom: 16px;
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid #F1F5F9;
 }
 
-.quick-filter-btn {
+.quick-tag {
+  cursor: pointer;
   padding: 8px 16px;
   border-radius: 20px;
   font-size: 13px;
-  background: var(--bg-dark);
-  border-color: var(--border-color);
-  color: var(--text-secondary);
-  transition: all 0.2s ease;
-}
-
-.quick-filter-btn:hover {
-  background: var(--bg-card-hover);
-  border-color: var(--primary);
-  color: var(--text-primary);
-}
-
-.quick-filter-btn.active {
-  background: var(--primary);
-  border-color: var(--primary);
-  color: white;
-}
-
-/* 筛选工具栏 */
-.filter-bar {
-  display: flex;
-  flex-direction: column;
-  padding: 20px 24px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-radius: 16px;
-  margin-bottom: 20px;
+  transition: all 0.2s;
 }
 
 .filter-row {
   display: flex;
-  align-items: center;
   gap: 12px;
+  flex-wrap: wrap;
 }
 
-.filter-row :deep(.el-date-editor) {
+.filter-row .el-date-picker {
   width: 260px;
 }
 
-.filter-row :deep(.el-select) {
+.filter-row .el-select {
   width: 140px;
 }
 
-.filter-row :deep(.el-input__wrapper) {
-  background: var(--bg-dark);
-  border-color: var(--border-color);
-  box-shadow: none;
-}
-
-.filter-row :deep(.el-range-input) {
-  color: var(--text-primary);
-}
-
-.filter-actions {
-  display: flex;
-  gap: 12px;
-}
-
-.filter-actions :deep(.el-button) {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: var(--bg-dark);
-  border-color: var(--border-color);
-  color: var(--text-secondary);
-}
-
-.filter-actions :deep(.el-button:hover) {
-  background: var(--bg-card-hover);
-  border-color: var(--primary);
-  color: var(--text-primary);
-}
-
-.filter-actions :deep(.el-button svg) {
-  width: 16px;
-  height: 16px;
-}
-
-/* 日志表格 */
-.logs-table {
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
+/* 日志卡片 */
+.logs-card {
+  background: #FFFFFF;
   border-radius: 16px;
-  overflow: hidden;
+  padding: 20px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
-.logs-table :deep(.el-table) {
-  --el-table-bg-color: transparent;
-  --el-table-tr-bg-color: transparent;
-  --el-table-header-bg-color: rgba(255, 255, 255, 0.02);
-  --el-table-row-hover-bg-color: rgba(255, 255, 255, 0.03);
-  --el-table-border-color: var(--border-color);
-  --el-table-text-color: var(--text-primary);
-  --el-table-header-text-color: var(--text-muted);
-}
-
-.logs-table :deep(.el-table th) {
-  font-weight: 600;
-  font-size: 12px;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.logs-table :deep(.el-table td) {
-  padding: 16px 12px;
-}
-
-.time-cell {
+.time-text {
+  font-size: 14px;
+  color: #475569;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 13px;
-  color: var(--text-secondary);
 }
 
-.admin-cell {
+.admin-info {
   display: flex;
   align-items: center;
   gap: 10px;
 }
 
 .admin-avatar {
-  width: 32px;
-  height: 32px;
-  background: linear-gradient(135deg, var(--primary), var(--primary-light));
-  border-radius: 8px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  background: linear-gradient(135deg, #0891B2, #22D3EE);
   font-size: 12px;
-  font-weight: 600;
-  color: white;
+  color: #FFFFFF;
 }
 
-.action-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 20px;
-  font-size: 12px;
+.admin-name {
+  font-size: 14px;
+  color: #1E293B;
   font-weight: 500;
 }
 
-.action-badge.default {
-  background: rgba(148, 163, 184, 0.1);
-  color: var(--text-secondary);
+.detail-text {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.5;
 }
 
-.action-badge.danger {
-  background: rgba(239, 68, 68, 0.1);
-  color: var(--danger);
-}
-
-.action-badge.success {
-  background: rgba(5, 150, 105, 0.1);
-  color: var(--success);
-}
-
-.action-badge.info {
-  background: rgba(2, 132, 199, 0.1);
-  color: var(--info);
-}
-
-.detail-cell {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.target-info {
+.ip-code {
   font-size: 13px;
-  color: var(--text-muted);
-}
-
-.detail-info {
-  font-size: 12px;
-  color: var(--text-muted);
-  word-break: break-all;
-}
-
-.ip-cell {
+  color: #64748B;
   font-family: 'JetBrains Mono', monospace;
-  font-size: 12px;
-  color: var(--text-muted);
+  background: #F8FAFC;
+  padding: 4px 8px;
+  border-radius: 6px;
 }
 
 /* 分页 */
-.pagination-wrapper {
+.pagination-card {
+  background: #FFFFFF;
+  padding: 16px 20px;
+  border-radius: 16px;
+  margin-top: 16px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   justify-content: flex-end;
-  padding: 20px;
-  background: var(--bg-card);
-  border: 1px solid var(--border-color);
-  border-top: none;
-  border-radius: 0 0 16px 16px;
 }
 
-.pagination-wrapper :deep(.el-pagination) {
-  --el-pagination-bg-color: transparent;
-  --el-pagination-text-color: var(--text-secondary);
-  --el-pagination-button-bg-color: var(--bg-dark);
-  --el-pagination-button-color: var(--text-secondary);
-  --el-pagination-hover-color: var(--primary);
-}
+@media (max-width: 1024px) {
+  .analysis-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
 
-.pagination-wrapper :deep(.el-pager li) {
-  background: var(--bg-dark);
-  border-radius: 8px;
-}
+  .filter-row {
+    flex-direction: column;
+  }
 
-.pagination-wrapper :deep(.el-pager li.is-active) {
-  background: var(--primary);
-  color: white;
-}
-
-/* 日期选择器样式 */
-:deep(.el-date-editor.el-input__wrapper) {
-  background: var(--bg-dark);
-  border-color: var(--border-color);
-}
-
-:deep(.el-range-separator) {
-  color: var(--text-muted);
+  .filter-row .el-date-picker,
+  .filter-row .el-select {
+    width: 100%;
+  }
 }
 </style>

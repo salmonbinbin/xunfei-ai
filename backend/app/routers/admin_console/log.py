@@ -232,28 +232,60 @@ async def analyze_logs(request: Request, db: AsyncSession = Depends(get_db)):
     # Calculate peak hour
     peak_hour = max(hourly_counts.items(), key=lambda x: x[1])[0] if hourly_counts else None
 
+    # Calculate active days (days with at least one operation)
+    active_days = len([d for d in daily_counts.values() if d > 0])
+
     # Calculate 7-day trend (fill in missing days with 0)
     trend = []
     for i in range(7):
         date = (datetime.now() - timedelta(days=6-i)).strftime("%Y-%m-%d")
         trend.append({"date": date, "count": daily_counts.get(date, 0)})
 
-    # Generate AI summary
-    summary_stats = f"近7天共{total_count}次操作，峰值出现在{peak_hour}点"
-    if top_actions:
-        top_action = top_actions[0]
-        summary_stats += f"，最多操作是{top_action['action_text']}({top_action['count']}次)"
+    # Build detailed stats for AI
+    action_details = "\n".join([f"- {get_action_text(a)}: {c}次" for a, c in sorted_actions[:5]])
+
+    # Calculate comparison with average
+    avg_per_day = total_count / 7 if total_count > 0 else 0
+    today_count = daily_counts.get(datetime.now().strftime("%Y-%m-%d"), 0)
+
+    # Determine activity level
+    if avg_per_day > 20:
+        activity_level = "非常活跃"
+    elif avg_per_day > 10:
+        activity_level = "比较活跃"
+    elif avg_per_day > 5:
+        activity_level = "一般活跃"
+    else:
+        activity_level = "较少操作"
+
+    # Generate AI summary with more detail
+    detail_stats = f"""近7天操作数据：
+- 总操作次数：{total_count}次
+- 活跃天数：{active_days}天
+- 日均操作：{avg_per_day:.1f}次
+- 今日操作：{today_count}次
+- 高峰时段：{peak_hour}点
+- 操作类型分布：
+{action_details}"""
 
     try:
         xinghuo = XingHuoService()
-        prompt = f"简洁概括：{summary_stats}。50字内。"
+        prompt = f"""你是数据分析助手。请分析以下管理员操作数据，用2-3句话概括：
+{detail_stats}
+
+分析要点：
+1. 管理员的整体活动水平
+2. 是否有异常模式（如某天操作量突然增加/减少）
+3. 主要操作偏好
+
+请用简洁的中文回答，不超过80字。"""
+
         messages = [{"role": "user", "content": prompt}]
-        ai_summary = await xinghuo.chat_completion(messages, user_id=str(admin_id), max_tokens=100)
-        # Trim to ~50 chars response
-        summary = ai_summary.strip()[:100] if ai_summary else summary_stats
+        ai_summary = await xinghuo.chat_completion(messages, user_id=str(admin_id), max_tokens=200)
+        summary = ai_summary.strip()[:150] if ai_summary else f"管理员活动{activity_level}，共{total_count}次操作，日均{avg_per_day:.1f}次。"
     except Exception as e:
         logger.warning(f"[Logs] AI summary failed: {e}")
-        summary = summary_stats
+        summary = f"管理员活动{activity_level}，共{total_count}次操作，日均{avg_per_day:.1f}次，峰值出现在{peak_hour}点。"
 
     logger.info(f"[Logs] Analysis complete: total={total_count}, peak_hour={peak_hour}")
 
@@ -264,6 +296,7 @@ async def analyze_logs(request: Request, db: AsyncSession = Depends(get_db)):
             "total_count": total_count,
             "top_actions": top_actions,
             "peak_hour": peak_hour,
+            "active_days": active_days,
             "trend": trend
         }
     }
