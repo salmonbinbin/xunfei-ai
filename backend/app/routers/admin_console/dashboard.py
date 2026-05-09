@@ -13,7 +13,7 @@ from jose import jwt
 from app.database import get_db
 from app.utils.errors import handle_app_errors
 from app.config import settings
-from app.models import UserLog, LoginLog, ApiLog, AdminLog
+from app.models import UserLog, LoginLog, ApiLog, AdminLog, User
 
 logger = logging.getLogger("api")
 
@@ -91,6 +91,20 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
             .where(ApiLog.created_at >= start_of_day, ApiLog.created_at <= end_of_day)
         )
         api_calls = result.scalar() or 0
+
+        # 学生用户总数
+        result = await db.execute(
+            select(func.count(User.id))
+            .where(User.role == "student", User.is_deleted == 0)
+        )
+        total_students = result.scalar() or 0
+
+        # 教师用户总数
+        result = await db.execute(
+            select(func.count(User.id))
+            .where(User.role == "teacher", User.is_deleted == 0)
+        )
+        total_teachers = result.scalar() or 0
 
         # 功能使用排行（TOP5）
         result = await db.execute(
@@ -175,6 +189,8 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
                 "today_student_logins": student_logins,
                 "today_teacher_logins": teacher_logins,
                 "today_api_calls": api_calls,
+                "total_students": total_students,
+                "total_teachers": total_teachers,
                 "module_ranking": module_ranking,
                 "api_stats": api_stats,
                 "date": date.today().isoformat()
@@ -190,6 +206,8 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
                 "today_student_logins": 0,
                 "today_teacher_logins": 0,
                 "today_api_calls": 0,
+                "total_students": 0,
+                "total_teachers": 0,
                 "module_ranking": [],
                 "api_stats": [],
                 "date": date.today().isoformat()

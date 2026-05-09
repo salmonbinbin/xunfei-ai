@@ -67,7 +67,7 @@
       </div>
     </div>
 
-    <!-- 登录统计 -->
+    <!-- 用户统计 -->
     <div class="login-stats">
       <div class="login-stat-card student">
         <div class="login-icon">
@@ -77,8 +77,8 @@
           </svg>
         </div>
         <div class="login-info">
-          <span class="login-value">{{ stats.today_student_logins?.toLocaleString() || 0 }}</span>
-          <span class="login-label">学生登录</span>
+          <span class="login-value">{{ stats.total_students?.toLocaleString() || 0 }}</span>
+          <span class="login-label">学生用户人数</span>
         </div>
         <div class="login-trend up">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -96,8 +96,8 @@
           </svg>
         </div>
         <div class="login-info">
-          <span class="login-value">{{ stats.today_teacher_logins?.toLocaleString() || 0 }}</span>
-          <span class="login-label">教师登录</span>
+          <span class="login-value">{{ stats.total_teachers?.toLocaleString() || 0 }}</span>
+          <span class="login-label">教师用户人数</span>
         </div>
         <div class="login-trend up">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -223,6 +223,8 @@ const stats = reactive({
   today_student_logins: 0,
   today_teacher_logins: 0,
   today_api_calls: 0,
+  total_students: 0,
+  total_teachers: 0,
   api_stats: [],
   module_ranking: []
 })
@@ -389,6 +391,8 @@ async function fetchData() {
       today_student_logins: statsData.today_student_logins || 0,
       today_teacher_logins: statsData.today_teacher_logins || 0,
       today_api_calls: statsData.today_api_calls || 0,
+      total_students: statsData.total_students || 0,
+      total_teachers: statsData.total_teachers || 0,
       api_stats: statsData.api_stats || [],
       module_ranking: statsData.module_ranking || []
     })

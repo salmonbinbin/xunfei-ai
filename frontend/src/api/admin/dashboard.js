@@ -11,5 +11,5 @@ export const getDashboardStats = () => {
 
 export const getDashboardTrend = (date) => {
   logger.debug(`[AdminAPI] Fetch dashboard trend for date: ${date}`)
-  return adminApi.get('/admin/dashboard/trend', { params: { date } })
+  return adminApi.get('/admin/dashboard/trend', { params: { query_date: date } })
 }
