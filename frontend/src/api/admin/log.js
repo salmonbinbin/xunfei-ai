@@ -13,3 +13,8 @@ export const getLogActions = () => {
   logger.debug('[AdminAPI] Fetch log action types')
   return adminApi.get('/admin/logs/actions')
 }
+
+export const analyzeLogs = () => {
+  logger.debug('[AdminAPI] Analyze logs with AI')
+  return adminApi.post('/admin/logs/analyze')
+}
