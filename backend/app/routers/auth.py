@@ -63,8 +63,19 @@ async def login(login_data: LoginRequest, db: AsyncSession = Depends(get_db)):
             detail="用户名或密码错误"
         )
 
-    # 更新最后登录时间
-    user.last_login = datetime.utcnow()
+    # 检查用户是否被禁用
+    if user.status == "disabled":
+        logger.warning(f"[Auth] Login failed - user disabled: {login_data.username}")
+        disable_msg = "账号已被禁用"
+        if user.disable_reason:
+            disable_msg += f"，原因：{user.disable_reason}"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=disable_msg
+        )
+
+    # 更新最后登录时间（使用本地时间，避免时区问题）
+    user.last_login = datetime.now()
     await db.commit()
     await db.refresh(user)
 
@@ -132,7 +143,7 @@ async def register(register_data: RegisterRequest, db: AsyncSession = Depends(ge
         phone=register_data.username,
         password_hash=password_hash,
         nickname=register_data.nickname or f"用户{register_data.username[-4:]}",
-        is_active=1
+        status="active"
     )
     db.add(user)
     await db.commit()
@@ -271,7 +282,7 @@ async def get_current_user_info(
         nickname=current_user.nickname,
         phone=current_user.phone,
         avatar_url=current_user.avatar_url,
-        is_active=bool(current_user.is_active),
+        status=current_user.status or "active",
         last_login=current_user.last_login,
         has_profile=profile is not None,
         profile=StudentProfileResponse.model_validate(profile) if profile else None

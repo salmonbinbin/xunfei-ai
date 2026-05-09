@@ -8,10 +8,12 @@ from pydantic import BaseModel
 from typing import Optional, List, Dict, Any
 from datetime import datetime
 import logging
+import json
 from jose import jwt
 
 from app.database import get_db
 from app.models import User, AdminLog
+from app.models.user import UserRole
 from app.utils.errors import handle_app_errors
 from app.config import settings
 
@@ -62,7 +64,7 @@ async def get_users(
         # 构建查询条件
         conditions = [User.is_deleted == 0]
         if role:
-            conditions.append(User.role == role)
+            conditions.append(User.role == (UserRole.student if role == "student" else UserRole.teacher))
         if status:
             conditions.append(User.status == status)
         if keyword:
@@ -105,13 +107,13 @@ async def get_users(
             # 获取专业/院系
             major = None
             department = None
-            if user.role == "student":
+            if user.role == UserRole.student:
                 from app.models import StudentProfile
                 result_prof = await db.execute(
                     select(StudentProfile.major).where(StudentProfile.user_id == user.id)
                 )
                 major = result_prof.scalar_one_or_none()
-            elif user.role == "teacher":
+            elif user.role == UserRole.teacher:
                 from app.models import TeacherProfile
                 result_prof = await db.execute(
                     select(TeacherProfile.department).where(TeacherProfile.user_id == user.id)
@@ -126,6 +128,7 @@ async def get_users(
                 "major": major,
                 "department": department,
                 "status": user.status or "active",
+                "disable_reason": user.disable_reason,  # 添加禁用原因
                 "last_login": user.last_login.isoformat() if user.last_login else None,
                 "total_chats": chat_count,
                 "created_at": user.created_at.isoformat() if user.created_at else None
@@ -192,6 +195,7 @@ async def get_user_detail(
             "phone": user.phone,
             "role": user.role,
             "status": user.status,
+            "disable_reason": user.disable_reason,  # 添加禁用原因
             "last_login": user.last_login.isoformat() if user.last_login else None,
             "total_chats": chat_count,
             "total_recordings": recording_count,
@@ -219,9 +223,16 @@ async def update_user_status(
     if not user:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="用户不存在")
 
-    # 更新状态
+    # 更新状态和禁用原因
+    update_values = {"status": body.status, "updated_at": datetime.now()}
+    if body.status == "disabled" and body.reason:
+        update_values["disable_reason"] = body.reason
+    elif body.status == "active":
+        # 启用时清空禁用原因
+        update_values["disable_reason"] = None
+
     await db.execute(
-        update(User).where(User.id == user_id).values(status=body.status, updated_at=datetime.now())
+        update(User).where(User.id == user_id).values(**update_values)
     )
     await db.commit()
 
@@ -233,7 +244,7 @@ async def update_user_status(
         action_text="修改用户状态" if body.status == "active" else "禁用用户",
         target_type="user",
         target_id=user_id,
-        detail={"status": body.status, "reason": body.reason},
+        detail=json.dumps({"status": body.status, "reason": body.reason}, ensure_ascii=False),
         ip_address=request.client.host if request.client else None
     )
     db.add(log)
@@ -263,7 +274,7 @@ async def export_users(
     # 构建查询条件
     conditions = [User.is_deleted == 0]
     if role:
-        conditions.append(User.role == role)
+        conditions.append(User.role == (UserRole.student if role == "student" else UserRole.teacher))
     if status:
         conditions.append(User.status == status)
 
@@ -281,7 +292,7 @@ async def export_users(
     ws.title = "用户列表"
 
     # 表头
-    headers = ["ID", "昵称", "手机号", "角色", "专业/院系", "状态", "注册时间", "最后登录"]
+    headers = ["ID", "昵称", "手机号", "角色", "专业/院系", "状态", "禁用原因", "注册时间", "最后登录"]
     ws.append(headers)
 
     # 数据
@@ -289,13 +300,13 @@ async def export_users(
         # 获取专业/院系
         major = None
         department = None
-        if user.role == "student":
+        if user.role == UserRole.student:
             from app.models import StudentProfile
             result_prof = await db.execute(
                 select(StudentProfile.major).where(StudentProfile.user_id == user.id)
             )
             major = result_prof.scalar_one_or_none()
-        elif user.role == "teacher":
+        elif user.role == UserRole.teacher:
             from app.models import TeacherProfile
             result_prof = await db.execute(
                 select(TeacherProfile.department).where(TeacherProfile.user_id == user.id)
@@ -306,9 +317,10 @@ async def export_users(
             user.id,
             user.nickname or "未设置",
             user.phone or "",
-            "学生" if user.role == "student" else "教师",
-            major if user.role == "student" else department or "-",
+            "学生" if user.role == UserRole.student else "教师",
+            major if user.role == UserRole.student else department or "-",
             "正常" if user.status == "active" else "已禁用",
+            user.disable_reason if user.status == "disabled" else "-",  # 禁用原因
             user.created_at.isoformat() if user.created_at else "",
             user.last_login.isoformat() if user.last_login else ""
         ])

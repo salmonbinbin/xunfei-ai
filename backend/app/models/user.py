@@ -22,7 +22,8 @@ class User(BaseModel):
     phone = Column(String(20), nullable=False, unique=True)
     password_hash = Column(String(255), nullable=False)
     avatar_url = Column(String(500), nullable=True)
-    is_active = Column(Integer, default=1)
+    status = Column(String(20), default="active")  # active / disabled
+    disable_reason = Column(Text, nullable=True)  # 禁用原因
     last_login = Column(DateTime, nullable=True)
     role = Column(SQLEnum(UserRole), default=UserRole.student, nullable=False)
 

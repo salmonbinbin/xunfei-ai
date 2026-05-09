@@ -152,7 +152,7 @@ async def get_current_user(
     if user is None:
         raise credentials_exception
 
-    if not user.is_active:
+    if user.status == "disabled":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="用户已被禁用"
@@ -202,7 +202,7 @@ async def get_current_teacher(
     if user is None:
         raise credentials_exception
 
-    if not user.is_active:
+    if user.status == "disabled":
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="用户已被禁用"

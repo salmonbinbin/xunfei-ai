@@ -102,7 +102,7 @@ class UserDetailResponse(BaseModel):
     nickname: Optional[str] = None
     phone: Optional[str] = None
     avatar_url: Optional[str] = None
-    is_active: bool
+    status: str
     last_login: Optional[datetime] = None
     has_profile: bool = False
     profile: Optional[StudentProfileResponse] = None

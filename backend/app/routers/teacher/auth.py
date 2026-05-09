@@ -64,7 +64,7 @@ async def register(register_data: TeacherRegisterRequest, db: AsyncSession = Dep
             phone=register_data.phone,
             password_hash=password_hash,
             nickname=register_data.name,
-            is_active=1,
+            status="active",
             role=UserRole.teacher
         )
         logger.info(f"[TeacherAuth] User object created, role={UserRole.teacher}")
@@ -164,6 +164,17 @@ async def login(login_data: TeacherLoginRequest, db: AsyncSession = Depends(get_
             detail="用户名或密码错误"
         )
 
+    # 检查用户是否被禁用
+    if user.status == "disabled":
+        logger.warning(f"[TeacherAuth] Login failed - user disabled: {login_data.phone}")
+        disable_msg = "账号已被禁用"
+        if user.disable_reason:
+            disable_msg += f"，原因：{user.disable_reason}"
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail=disable_msg
+        )
+
     # 验证角色为教师
     if user.role != UserRole.teacher:
         logger.warning(f"[TeacherAuth] Login failed - user is not teacher: {login_data.phone}")
@@ -172,8 +183,8 @@ async def login(login_data: TeacherLoginRequest, db: AsyncSession = Depends(get_
             detail="该账号不是教师账号"
         )
 
-    # 更新最后登录时间
-    user.last_login = datetime.utcnow()
+    # 更新最后登录时间（使用本地时间，避免时区问题）
+    user.last_login = datetime.now()
     await db.commit()
     await db.refresh(user)
 
