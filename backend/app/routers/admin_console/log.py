@@ -65,12 +65,18 @@ async def get_logs(
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
     action: Optional[str] = None,
-    admin_id: Optional[int] = None,
+    admin_id: Optional[str] = None,
     db: AsyncSession = Depends(get_db)
 ):
     """获取操作日志列表"""
     current_admin_id = get_current_admin_id(request)
     logger.info(f"[Logs] Get logs, admin_id={current_admin_id}, page={page}")
+
+    # 处理admin_id空字符串
+    try:
+        admin_id_int = int(admin_id) if admin_id else None
+    except ValueError:
+        admin_id_int = None
 
     try:
         # 构建查询条件
@@ -81,8 +87,8 @@ async def get_logs(
             conditions.append(AdminLog.created_at <= f"{end_date} 23:59:59")
         if action:
             conditions.append(AdminLog.action == action)
-        if admin_id:
-            conditions.append(AdminLog.admin_id == admin_id)
+        if admin_id_int:
+            conditions.append(AdminLog.admin_id == admin_id_int)
 
         # 获取总数
         count_query = select(func.count(AdminLog.id))
