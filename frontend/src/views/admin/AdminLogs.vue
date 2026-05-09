@@ -19,7 +19,7 @@
             @click="handleAIAnalyze"
             class="ai-analyze-btn"
           >
-            <Magic v-if="!analyzing" />
+            <MagicStick v-if="!analyzing" />
             AI智能分析
           </el-button>
         </div>
@@ -188,7 +188,7 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { Magic } from '@element-plus/icons-vue'
+import { MagicStick } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { getLogs, getLogActions, analyzeLogs } from '@/api/admin/log'
 import { getLineChartOption } from '@/utils/echarts'
