@@ -8,6 +8,15 @@
       <div class="bg-glow glow-2"></div>
     </div>
 
+    <!-- 返回按钮 -->
+    <button class="back-button" @click="goBack">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <line x1="19" y1="12" x2="5" y2="12"/>
+        <polyline points="12 19 5 12 12 5"/>
+      </svg>
+      <span>返回</span>
+    </button>
+
     <!-- 登录卡片 -->
     <div class="login-card" :class="{ 'shake': shake }">
       <!-- Logo区域 -->
@@ -208,6 +217,11 @@ onMounted(() => {
     rememberMe.value = true
   }
 })
+
+// 返回上一页
+function goBack() {
+  router.push('/login')
+}
 </script>
 
 <style scoped>
@@ -248,6 +262,38 @@ onMounted(() => {
   position: absolute;
   inset: 0;
   pointer-events: none;
+}
+
+/* 返回按钮 */
+.back-button {
+  position: fixed;
+  top: 24px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(30, 41, 59, 0.9);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--border-color);
+  border-radius: 10px;
+  color: var(--text-secondary);
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  z-index: 10;
+}
+
+.back-button:hover {
+  background: rgba(30, 41, 59, 1);
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.back-button svg {
+  width: 18px;
+  height: 18px;
 }
 
 .bg-gradient {

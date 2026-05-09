@@ -10,10 +10,6 @@
         <p class="page-subtitle">审计所有管理员操作记录</p>
       </div>
       <div class="header-actions">
-        <el-button @click="router.push('/login')">
-          <el-icon><ArrowLeft /></el-icon>
-          返回
-        </el-button>
         <el-button type="primary" :loading="analyzing" @click="handleAIAnalyze" class="ai-btn">
           <el-icon v-if="!analyzing"><MagicStick /></el-icon>
           AI智能分析
@@ -151,13 +147,10 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { useRouter } from 'vue-router'
-import { MagicStick, Document, DataAnalysis, ArrowLeft } from '@element-plus/icons-vue'
+import { MagicStick, Document, DataAnalysis } from '@element-plus/icons-vue'
 import * as echarts from 'echarts'
 import { getLogs, getLogActions, analyzeLogs } from '@/api/admin/log'
 import logger from '@/utils/logger'
-
-const router = useRouter()
 
 const quickFilters = [
   { label: '全部', value: '' },
