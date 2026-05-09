@@ -3,21 +3,77 @@
     <!-- 页面标题 -->
     <div class="page-header">
       <div class="header-content">
-        <h1 class="page-title">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
-            <polyline points="14 2 14 8 20 8"/>
-            <line x1="16" y1="13" x2="8" y2="13"/>
-            <line x1="16" y1="17" x2="8" y2="17"/>
-          </svg>
-          操作日志
-        </h1>
+        <div class="title-row">
+          <h1 class="page-title">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+              <line x1="16" y1="13" x2="8" y2="13"/>
+              <line x1="16" y1="17" x2="8" y2="17"/>
+            </svg>
+            操作日志
+          </h1>
+          <el-button
+            type="primary"
+            :loading="analyzing"
+            @click="handleAIAnalyze"
+            class="ai-analyze-btn"
+          >
+            <Magic v-if="!analyzing" />
+            AI智能分析
+          </el-button>
+        </div>
         <p class="page-subtitle">审计所有管理员操作记录</p>
       </div>
     </div>
 
+    <!-- AI分析结果卡片 -->
+    <div v-if="analysisResult" class="analysis-card">
+      <div class="analysis-header">
+        <div class="analysis-title">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2a10 10 0 1 0 10 10H12V2z"/>
+            <path d="M12 2a10 10 0 0 1 10 10"/>
+          </svg>
+          AI行为分析
+        </div>
+        <el-button text @click="analysisResult = null">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="18 15 12 9 6 15"/>
+          </svg>
+          收起
+        </el-button>
+      </div>
+      <div class="analysis-summary">{{ analysisResult.summary }}</div>
+      <div class="analysis-stats">
+        <div class="stat-item">
+          <span class="stat-label">总操作</span>
+          <span class="stat-value">{{ analysisResult.total_actions }}</span>
+        </div>
+        <div class="stat-item">
+          <span class="stat-label">高峰时段</span>
+          <span class="stat-value">{{ analysisResult.peak_hour }}</span>
+        </div>
+      </div>
+      <div class="trend-chart" ref="trendChartRef"></div>
+    </div>
+
     <!-- 筛选工具栏 -->
     <div class="filter-bar">
+      <!-- 快捷筛选按钮 -->
+      <div class="quick-filters">
+        <el-button
+          v-for="filter in quickFilters"
+          :key="filter.value"
+          :type="filters.action === filter.value ? 'primary' : ''"
+          :class="{ active: filters.action === filter.value }"
+          @click="handleQuickFilter(filter.value)"
+          class="quick-filter-btn"
+        >
+          {{ filter.label }}
+        </el-button>
+      </div>
+
       <div class="filter-row">
         <el-date-picker
           v-model="dateRange"
@@ -76,7 +132,7 @@
       >
         <el-table-column prop="created_at" label="操作时间" width="180">
           <template #default="{ row }">
-            <span class="time-cell">{{ row.created_at }}</span>
+            <span class="time-cell">{{ formatTime(row.created_at) }}</span>
           </template>
         </el-table-column>
         <el-table-column prop="admin_name" label="管理员" width="120">
@@ -132,8 +188,25 @@
 <script setup>
 import { ref, reactive, onMounted } from 'vue'
 import { ElMessage } from 'element-plus'
-import { getLogs, getLogActions } from '@/api/admin/log'
+import { Magic } from '@element-plus/icons-vue'
+import * as echarts from 'echarts'
+import { getLogs, getLogActions, analyzeLogs } from '@/api/admin/log'
+import { getLineChartOption } from '@/utils/echarts'
 import logger from '@/utils/logger'
+
+// 快捷筛选
+const quickFilters = [
+  { label: '全部', value: '' },
+  { label: '禁用', value: 'user.disable' },
+  { label: '启用', value: 'user.enable' },
+  { label: '导出', value: 'user.export' },
+  { label: '登录', value: 'login' }
+]
+
+// 分析状态
+const analyzing = ref(false)
+const analysisResult = ref(null)
+const trendChartRef = ref(null)
 
 // 日志列表数据
 const logs = ref([])
@@ -164,6 +237,80 @@ const actionTypes = ref([])
 
 // 管理员列表（从日志中提取）
 const adminList = ref([])
+
+// 快捷筛选
+function handleQuickFilter(value) {
+  filters.action = value
+  pagination.page = 1
+  fetchLogs()
+}
+
+// AI分析
+async function handleAIAnalyze() {
+  analyzing.value = true
+  try {
+    const res = await analyzeLogs()
+    analysisResult.value = res.data?.data || res.data || {}
+    logger.info('[AdminLogs] AI analysis completed:', analysisResult.value)
+
+    // 延迟初始化图表确保DOM已渲染
+    setTimeout(() => {
+      initTrendChart()
+    }, 100)
+  } catch (error) {
+    logger.error('[AdminLogs] AI analysis failed:', error?.response?.data || error.message)
+    ElMessage.error('AI分析失败，请稍后重试')
+  } finally {
+    analyzing.value = false
+  }
+}
+
+// 初始化趋势图表
+function initTrendChart() {
+  if (!trendChartRef.value || !analysisResult.value?.daily_trend) return
+
+  const chartDom = trendChartRef.value
+  const myChart = echarts.getInstanceByDom(chartDom)
+
+  if (myChart) {
+    myChart.dispose()
+  }
+
+  const chart = echarts.init(chartDom)
+  const dailyTrend = analysisResult.value.daily_trend
+
+  const option = getLineChartOption(
+    dailyTrend.map(d => d.count),
+    dailyTrend.map(d => d.date),
+    '操作次数'
+  )
+
+  chart.setOption(option)
+}
+
+// 时间格式化（分级显示）
+function formatTime(dateStr) {
+  if (!dateStr) return '-'
+
+  const date = new Date(dateStr)
+  const now = new Date()
+  const today = new Date(now.getFullYear(), now.getMonth(), now.getDate())
+  const yesterday = new Date(today.getTime() - 24 * 60 * 60 * 1000)
+
+  const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+
+  const pad = (n) => String(n).padStart(2, '0')
+  const timeStr = `${pad(date.getHours())}:${pad(date.getMinutes())}:${pad(date.getSeconds())}`
+
+  if (dateOnly.getTime() === today.getTime()) {
+    return `今天 ${timeStr}`
+  } else if (dateOnly.getTime() === yesterday.getTime()) {
+    return `昨天 ${timeStr}`
+  } else {
+    const monthDay = `${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
+    return `${monthDay} ${timeStr}`
+  }
+}
 
 // 获取日志列表
 async function fetchLogs() {
@@ -325,6 +472,12 @@ onMounted(() => {
   gap: 8px;
 }
 
+.title-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
 .page-title {
   display: flex;
   align-items: center;
@@ -347,11 +500,150 @@ onMounted(() => {
   margin: 0;
 }
 
-/* 筛选工具栏 */
-.filter-bar {
+/* AI分析按钮 */
+.ai-analyze-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: linear-gradient(135deg, var(--primary), var(--primary-light));
+  border: none;
+  border-radius: 12px;
+  padding: 10px 20px;
+  font-weight: 600;
+  transition: all 0.3s ease;
+}
+
+.ai-analyze-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(8, 145, 178, 0.4);
+}
+
+.ai-analyze-btn :deep(.el-icon) {
+  font-size: 16px;
+}
+
+/* AI分析结果卡片 */
+.analysis-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 24px;
+  margin-bottom: 20px;
+}
+
+.analysis-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  margin-bottom: 16px;
+}
+
+.analysis-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.analysis-title svg {
+  width: 22px;
+  height: 22px;
+  color: var(--primary-light);
+}
+
+.analysis-header :deep(.el-button) {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  font-size: 13px;
+}
+
+.analysis-header :deep(.el-button svg) {
+  width: 16px;
+  height: 16px;
+}
+
+.analysis-summary {
+  font-size: 15px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  margin-bottom: 20px;
+  padding: 16px;
+  background: rgba(8, 145, 178, 0.08);
+  border-radius: 12px;
+  border-left: 3px solid var(--primary);
+}
+
+.analysis-stats {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.stat-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.stat-value {
+  font-size: 24px;
+  font-weight: 700;
+  color: var(--primary-light);
+}
+
+.trend-chart {
+  height: 200px;
+  background: var(--bg-dark);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+/* 快捷筛选 */
+.quick-filters {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.quick-filter-btn {
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  background: var(--bg-dark);
+  border-color: var(--border-color);
+  color: var(--text-secondary);
+  transition: all 0.2s ease;
+}
+
+.quick-filter-btn:hover {
+  background: var(--bg-card-hover);
+  border-color: var(--primary);
+  color: var(--text-primary);
+}
+
+.quick-filter-btn.active {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: white;
+}
+
+/* 筛选工具栏 */
+.filter-bar {
+  display: flex;
+  flex-direction: column;
   padding: 20px 24px;
   background: var(--bg-card);
   border: 1px solid var(--border-color);
