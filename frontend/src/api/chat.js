@@ -31,7 +31,7 @@ export function sendVoice(formData) {
  * @param {string} voice - 发音人，默认x4_lingxiaoyao_em
  * @returns {Promise}
  */
-export function textToSpeech(text, voice = 'x4_lingxiaoyao_em') {
+export function textToSpeech(text, voice = 'xiaoyan') {
   console.log('[Chat API] Requesting TTS, text length:', text.length)
   return api.post('/chat/tts', null, {
     params: { text, voice }

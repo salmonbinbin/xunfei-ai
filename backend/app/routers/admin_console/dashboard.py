@@ -151,7 +151,8 @@ async def get_dashboard_stats(request: Request, db: AsyncSession = Depends(get_d
             "spark": "星火大模型",
             "ocr": "文字识别",
             "nlp": "NLP分析",
-            "ppt": "智能PPT"
+            "ppt": "智能PPT",
+            "image_understanding": "图片理解"
         }
         for row in result.fetchall():
             api_stats.append({

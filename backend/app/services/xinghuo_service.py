@@ -302,6 +302,17 @@ class XingHuoService:
         self.logger.info(f"[XingHuo] Image understanding result length: {len(result_text)}")
         self.logger.info(f"[XingHuo] Raw result: {result_text[:2000]}")
 
+        # 记录图片理解API调用日志（异步，不阻塞）
+        try:
+            asyncio.create_task(save_api_log(
+                api_name="image_understanding",
+                call_type="success",
+                response_time_ms=0,  # 图片理解不单独计算时间
+                user_type="student"
+            ))
+        except Exception as log_err:
+            self.logger.warning(f"[XingHuo] Failed to save API log: {log_err}")
+
         # 解析JSON结果
         try:
             import re

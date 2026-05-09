@@ -134,7 +134,7 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   // Text to Speech - 将文字转为语音播放
-  async function speakText(text, voice = 'x4_lingxiaoyao_em') {
+  async function speakText(text, voice = 'xiaoyan') {
     console.log('[ChatStore] Requesting TTS, text length:', text.length)
 
     if (!text || !text.trim()) {
