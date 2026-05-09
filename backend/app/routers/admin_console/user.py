@@ -237,11 +237,13 @@ async def update_user_status(
     await db.commit()
 
     # 记录操作日志
+    log_action = "user.disable" if body.status == "disabled" else "user.enable"
+    log_action_text = "禁用用户" if body.status == "disabled" else "启用用户"
     log = AdminLog(
         admin_id=admin_id,
         admin_name="管理员",
-        action="user.status",
-        action_text="修改用户状态" if body.status == "active" else "禁用用户",
+        action=log_action,
+        action_text=log_action_text,
         target_type="user",
         target_id=user_id,
         detail=json.dumps({"status": body.status, "reason": body.reason}, ensure_ascii=False),

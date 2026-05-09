@@ -152,10 +152,10 @@ import logger from '@/utils/logger'
 
 const quickFilters = [
   { label: '全部', value: '' },
-  { label: '禁用用户', value: 'user.disable' },
-  { label: '启用用户', value: 'user.enable' },
-  { label: '导出数据', value: 'user.export' },
-  { label: '登录登出', value: 'login' }
+  { label: '禁用', value: 'user.disable' },
+  { label: '启用', value: 'user.enable' },
+  { label: '登录', value: 'login' },
+  { label: '登出', value: 'logout' }
 ]
 
 const analyzing = ref(false)
@@ -267,14 +267,27 @@ function getActionTagType(action) {
 
 function formatDetail(row) {
   if (!row.detail) return '-'
+
+  // Parse JSON detail if it's a string
+  let detail = row.detail
+  if (typeof detail === 'string') {
+    try {
+      detail = JSON.parse(detail)
+    } catch {
+      return detail
+    }
+  }
+
   if (row.action === 'user.disable') {
-    return `禁用用户ID #${row.target_id}${row.detail?.reason ? '，原因：' + row.detail.reason : ''}`
+    const reason = detail?.reason || ''
+    return reason ? `禁用用户 #${row.target_id}，原因：${reason}` : `禁用用户 #${row.target_id}`
   }
   if (row.action === 'user.enable') {
-    return `启用用户ID #${row.target_id}`
+    return `启用用户 #${row.target_id}`
   }
   if (row.action === 'user.export') {
-    return `导出用户数据${row.detail?.count ? '，共' + row.detail.count + '条' : ''}`
+    const count = detail?.count || ''
+    return count ? `导出用户数据，共${count}条` : `导出用户数据`
   }
   if (row.action === 'user.view') {
     return `查看用户ID #${row.target_id}的详情`
