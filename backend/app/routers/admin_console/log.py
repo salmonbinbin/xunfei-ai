@@ -116,7 +116,7 @@ async def get_logs(
                 "admin_id": log.admin_id,
                 "admin_name": log.admin_name,
                 "action": log.action,
-                "action_text": log.action_text,
+                "action_text": log.action_text or get_action_text(log.action),
                 "target_type": log.target_type,
                 "target_id": log.target_id,
                 "detail": log.detail,

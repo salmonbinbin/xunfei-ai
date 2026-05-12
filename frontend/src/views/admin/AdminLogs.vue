@@ -280,9 +280,16 @@ function formatDetail(row) {
     }
   }
 
-  if (row.action === 'user.disable') {
+  if (row.action === 'user.disable' || row.action === 'user.status') {
     const reason = detail?.reason || ''
-    return reason ? `禁用用户 #${row.target_id}，原因：${reason}` : `禁用用户 #${row.target_id}`
+    const status = detail?.status || ''
+    if (status === 'disabled') {
+      return reason ? `禁用用户 #${row.target_id}，原因：${reason}` : `禁用用户 #${row.target_id}`
+    }
+    if (status === 'active') {
+      return `启用用户 #${row.target_id}`
+    }
+    return reason ? `禁用用户 #${row.target_id}，原因：${reason}` : `修改用户 #${row.target_id} 状态`
   }
   if (row.action === 'user.enable') {
     return `启用用户 #${row.target_id}`
@@ -306,8 +313,18 @@ function formatDetail(row) {
   if (row.action === 'log.view') {
     return '查看操作日志'
   }
-  if (typeof row.detail === 'object') {
-    return Object.entries(row.detail).map(([k, v]) => `${k}: ${v}`).join('，')
+  // 通用fallback：将JSON字段转为可读中文
+  if (typeof detail === 'object' && detail !== null) {
+    const parts = Object.entries(detail)
+      .filter(([, v]) => v !== '' && v !== null)
+      .map(([k, v]) => {
+        const keyMap = { status: '状态', reason: '原因', count: '数量' }
+        const label = keyMap[k] || k
+        const valMap = { active: '正常', disabled: '已禁用', enabled: '已启用' }
+        const val = valMap[v] || v
+        return `${label}: ${val}`
+      })
+    return parts.length > 0 ? `#${row.target_id} - ${parts.join('，')}` : `#${row.target_id}`
   }
   return String(row.detail)
 }
