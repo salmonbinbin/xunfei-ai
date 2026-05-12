@@ -41,10 +41,6 @@ uploads/
 *.wav
 *.m4a
 
-# 第三方演示代码（独立维护）
-websdk-python-demo/
-http_demo/
-
 # Database
 *.db
 *.sqlite
@@ -57,3 +53,21 @@ build/
 # Temporary files
 *.tmp
 .cache/
+
+# Test data & demos (not needed for production)
+test_*.xlsx
+模拟成绩表_*.xlsx
+http_demo.zip
+http_demo/
+websdk-python-demo/
+demo/
+1.txt
+
+# Editor config
+.obsidian/
+docs/.obsidian/
+docs/generated/
+
+# Generated doc scripts
+docs/generate_report.js
+docs/diagram_generator.py
