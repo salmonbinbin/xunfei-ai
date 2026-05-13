@@ -356,6 +356,9 @@ async def get_ai_report(
         import json
         try:
             report_data = json.loads(record.ai_report)
+            suggestions = report_data.get("suggestions", "")
+            if isinstance(suggestions, list):
+                suggestions = "\n\n".join(suggestions)
             return {
                 "success": True,
                 "data": AIReportResponse(
@@ -370,7 +373,7 @@ async def get_ai_report(
                         discrimination=report_data.get("exam_analysis", {}).get("discrimination", 0.3),
                         discrimination_text=report_data.get("exam_analysis", {}).get("discrimination_text", "良好")
                     ),
-                    suggestions=report_data.get("suggestions", "")
+                    suggestions=suggestions
                 )
             }
         except json.JSONDecodeError:
