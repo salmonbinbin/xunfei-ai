@@ -6,10 +6,9 @@
 import time
 import uuid
 import logging
-from typing import Optional
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status, Header
+from fastapi import APIRouter, Depends, HTTPException, UploadFile, File, Form, status
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select
@@ -19,7 +18,8 @@ from app.models.translation import TranslationTask
 from app.models.user import User
 from app.services.translation_service import translation_service
 from app.services.user_log_service import save_user_log
-from app.utils.errors import handle_app_errors, NotFoundException, ValidationException, UnauthorizedException
+from app.utils.errors import handle_app_errors, NotFoundException, ValidationException
+from app.utils.auth import get_current_user
 from docx import Document
 
 logger = logging.getLogger("api")
@@ -34,26 +34,6 @@ ALLOWED_EXTENSIONS = {".txt", ".docx"}
 def generate_task_id() -> str:
     """生成翻译任务ID"""
     return f"trans_{uuid.uuid4().hex[:16]}"
-
-
-async def get_current_user(
-    authorization: Optional[str] = None,
-    db: AsyncSession = Depends(get_db)
-) -> User:
-    """从Authorization头获取当前用户（简化版）"""
-    if not authorization or not authorization.startswith("Bearer "):
-        raise UnauthorizedException("请先登录")
-
-    token = authorization.replace("Bearer ", "")
-    # 简化：这里应该验证JWT token
-    # TODO: 接入完整的JWT验证
-    result = await db.execute(select(User).where(User.id == int(token)))
-    user = result.scalar_one_or_none()
-
-    if not user:
-        raise UnauthorizedException("用户不存在")
-
-    return user
 
 
 @router.post("")
@@ -117,7 +97,7 @@ async def translate_document(
     target_lang: str = Form(...),
     source_lang: str = Form("cn"),  # 文档翻译源语言固定为中文
     db: AsyncSession = Depends(get_db),
-    authorization: Optional[str] = Header(None)
+    current_user: User = Depends(get_current_user)
 ):
     """
     文档翻译（上传.txt或.docx文件）
@@ -166,7 +146,7 @@ async def translate_document(
     # 创建翻译任务记录
     task = TranslationTask(
         task_id=task_id,
-        user_id=1,  # TODO: 从登录态获取
+        user_id=current_user.id,
         task_type="document",
         source_lang=source_lang,
         target_lang=target_lang,
@@ -218,7 +198,7 @@ async def translate_document(
 async def get_translation_preview(
     task_id: str,
     db: AsyncSession = Depends(get_db),
-    authorization: Optional[str] = Header(None)
+    current_user: User = Depends(get_current_user)
 ):
     """
     获取翻译预览
@@ -263,7 +243,7 @@ async def get_translation_preview(
 async def download_translated_document(
     task_id: str,
     db: AsyncSession = Depends(get_db),
-    authorization: Optional[str] = Header(None)
+    current_user: User = Depends(get_current_user)
 ):
     """
     下载翻译后的Word文档
